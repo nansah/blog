@@ -291,8 +291,9 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
 // ── Live per-category post counts (e.g. homepage "Explore by Category") ───
 (async function renderCategoryCounts() {
-  const spans = document.querySelectorAll('[data-cat-count]');
-  if (!spans.length || typeof supabaseClient === 'undefined') return;
+  const catSpans   = document.querySelectorAll('[data-cat-count]');
+  const totalSpans = document.querySelectorAll('[data-post-count]');
+  if ((!catSpans.length && !totalSpans.length) || typeof supabaseClient === 'undefined') return;
 
   const { data, error } = await supabaseClient.from('posts').select('category').eq('status', 'published');
   if (error || !data) return;
@@ -300,11 +301,13 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   const counts = {};
   data.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
 
-  spans.forEach(span => {
+  catSpans.forEach(span => {
     const cat = span.dataset.catCount;
     const n = counts[cat] || 0;
     span.textContent = n ? `${n} post${n !== 1 ? 's' : ''}` : 'coming soon';
   });
+
+  totalSpans.forEach(span => { span.textContent = data.length; });
 })();
 
 // ── Live social links + follower counts (editable in admin) ───────────────
@@ -345,5 +348,34 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   document.querySelectorAll('[data-social-link]').forEach(el => {
     const l = byId[el.dataset.socialLink];
     if (l?.url) el.href = l.url;
+  });
+})();
+
+// ── Live Instagram feed grid (homepage, editable in admin) ────────────────
+(async function renderInstagramFeed() {
+  const grid = document.getElementById('igFeedGrid');
+  if (!grid || typeof supabaseClient === 'undefined') return;
+
+  const { data, error } = await supabaseClient
+    .from('instagram_photos')
+    .select('*')
+    .eq('status', 'published')
+    .order('sort_order', { ascending: true })
+    .limit(8);
+
+  if (error || !data || !data.length) return; // keep the placeholder photos
+
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  grid.innerHTML = data.map(p => `
+    <a href="${esc(p.post_url || '#')}" class="ig-item reveal" target="_blank" rel="noopener">
+      <img src="${esc(p.image_url)}" alt="${esc(p.caption || 'Instagram post')}" loading="lazy" />
+      <div class="ig-overlay"><i class="fab fa-instagram"></i></div>
+    </a>
+  `).join('');
+
+  grid.querySelectorAll('.reveal').forEach(el => {
+    if (typeof revealObserver !== 'undefined') revealObserver.observe(el);
+    else el.classList.add('in-view');
   });
 })();
