@@ -102,6 +102,7 @@
                 <textarea id="message" name="message" placeholder="Tell me what you have in mind…" required></textarea>
               </div>
               <button type="submit" class="btn btn-gold" style="align-self: flex-start;">Send Message <i class="fas fa-paper-plane"></i></button>
+              <p id="contactFormNote" style="font-size:12px;color:var(--muted);"></p>
             </form>
           </div>
 
@@ -111,7 +112,7 @@
               <div class="contact-info-icon"><i class="fas fa-envelope"></i></div>
               <div>
                 <h4>Email</h4>
-                <p>hi@nanayaaansah.com</p>
+                <p><a href="mailto:hi@nanayaaansah.com" style="color:inherit;">hi@nanayaaansah.com</a></p>
                 <span>For all general inquiries</span>
               </div>
             </div>
@@ -119,7 +120,7 @@
               <div class="contact-info-icon"><i class="fas fa-briefcase"></i></div>
               <div>
                 <h4>Partnerships</h4>
-                <p>pr@nanayaaansah.com</p>
+                <p><a href="mailto:pr@nanayaaansah.com" style="color:inherit;">pr@nanayaaansah.com</a></p>
                 <span>Brand deals &amp; collaborations</span>
               </div>
             </div>
@@ -301,21 +302,84 @@
     });
 
     // Contact form
+    // Web3Forms ties each access key to ONE destination inbox, so you need
+    // two free keys — get each at https://web3forms.com (just enter the
+    // relevant email, no account/password needed):
+    //   1. Sign up with hi@nanayaaansah.com  -> paste key into GENERAL below
+    //   2. Sign up with pr@nanayaaansah.com  -> paste key into PARTNERSHIPS below
+    // Until both are set, submissions will show a clear error instead of
+    // silently pretending to send.
+    const WEB3FORMS_KEY_GENERAL      = '6216fcdc-69d1-48b4-9e15-abbe64b9d71d';
+    const WEB3FORMS_KEY_PARTNERSHIPS = '508a807e-5a82-416e-823f-449826d1fd93';
+
+    // "General Hello" goes to hi@ — every other inquiry type goes to pr@.
+    const ROUTES_TO_PARTNERSHIPS = ['collaboration', 'press', 'speaking', 'newsletter'];
+
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
-      contactForm.addEventListener('submit', e => {
+      contactForm.addEventListener('submit', async e => {
         e.preventDefault();
-        const btn = contactForm.querySelector('button[type="submit"]');
+        const btn  = contactForm.querySelector('button[type="submit"]');
+        const note = document.getElementById('contactFormNote');
         const original = btn.innerHTML;
-        btn.innerHTML = 'Sent! I\'ll be in touch soon ✓';
-        btn.style.background = '#4ade80';
-        btn.style.borderColor = '#4ade80';
-        contactForm.reset();
-        setTimeout(() => {
+
+        const subjectValue = document.getElementById('subject').value;
+        const routeToPartnerships = ROUTES_TO_PARTNERSHIPS.includes(subjectValue);
+        const accessKey = routeToPartnerships ? WEB3FORMS_KEY_PARTNERSHIPS : WEB3FORMS_KEY_GENERAL;
+
+        if (accessKey === 'YOUR_GENERAL_ACCESS_KEY_HERE' || accessKey === 'YOUR_PARTNERSHIPS_ACCESS_KEY_HERE') {
+          note.textContent = 'Contact form isn\'t connected yet — add your Web3Forms access keys.';
+          note.style.color = '#c0392b';
+          return;
+        }
+
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName  = document.getElementById('lastName').value.trim();
+        const subjectMap = { collaboration:'Brand Collaboration', press:'Press & Media', speaking:'Speaking & Events', newsletter:'Newsletter Feature', general:'General Hello' };
+        const inquiryType = subjectMap[subjectValue] || 'General Hello';
+
+        const payload = {
+          access_key: accessKey,
+          subject: `[${inquiryType}] New message from ${firstName} ${lastName}`,
+          name: `${firstName} ${lastName}`,
+          email: document.getElementById('email').value.trim(),
+          company: document.getElementById('company').value.trim(),
+          inquiry_type: inquiryType,
+          message: document.getElementById('message').value.trim(),
+        };
+
+        btn.disabled = true;
+        btn.innerHTML = 'Sending…';
+        note.textContent = '';
+
+        try {
+          const res = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await res.json();
+
+          if (result.success) {
+            btn.innerHTML = 'Sent! I\'ll be in touch soon ✓';
+            btn.style.background = '#4ade80';
+            btn.style.borderColor = '#4ade80';
+            contactForm.reset();
+            setTimeout(() => {
+              btn.innerHTML = original;
+              btn.style.background = '';
+              btn.style.borderColor = '';
+              btn.disabled = false;
+            }, 4000);
+          } else {
+            throw new Error(result.message || 'Submission failed');
+          }
+        } catch (err) {
           btn.innerHTML = original;
-          btn.style.background = '';
-          btn.style.borderColor = '';
-        }, 4000);
+          btn.disabled = false;
+          note.textContent = 'Something went wrong — please try again or email hi@nanayaaansah.com directly.';
+          note.style.color = '#c0392b';
+        }
       });
     }
   </script>
