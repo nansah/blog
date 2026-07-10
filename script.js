@@ -319,10 +319,18 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
   // Every social icon site-wide (footer, about section, etc.) is matched by
   // its existing aria-label — no extra markup needed for the icon links.
+  // Platforms with no real profile URL set are hidden instead of showing a
+  // dead "#" link.
   const labelMap = { Instagram: 'instagram', TikTok: 'tiktok', YouTube: 'youtube', Pinterest: 'pinterest', Twitter: 'twitter' };
   document.querySelectorAll('a[aria-label]').forEach(a => {
     const id = labelMap[a.getAttribute('aria-label')];
-    if (id && byId[id]?.url) a.href = byId[id].url;
+    if (!id) return;
+    const url = byId[id]?.url;
+    if (url && url !== '#') {
+      a.href = url;
+    } else {
+      a.style.display = 'none';
+    }
   });
 
   // Explicit hooks for follower counts, handles, and CTA links.
