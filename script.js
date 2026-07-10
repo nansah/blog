@@ -106,19 +106,19 @@ if (igGrid) igObserver.observe(igGrid);
 
 // ── Lightweight site search overlay ───────────────────────────────────────
 const searchIndex = [
-  { title: 'Home', group: 'Main', href: 'index.html' },
-  { title: 'Lifestyle', group: 'Category', href: 'lifestyle.html' },
-  { title: 'Fashion', group: 'Category', href: 'fashion.html' },
-  { title: 'Faith', group: 'Category', href: 'faith.html' },
-  { title: 'Beauty', group: 'Category', href: 'beauty.html' },
-  { title: 'Latest Posts', group: 'Section', href: 'index.html#blog' },
-  { title: 'All Posts', group: 'Section', href: 'blog.html' },
-  { title: 'About Nana Yaa', group: 'Section', href: 'about.html' },
-  { title: 'Shop My Faves', group: 'Connect', href: 'faves.html' },
-  { title: 'Work With Me', group: 'Connect', href: 'work-with-me.html' },
-  { title: 'Press & Media', group: 'Connect', href: 'press.html' },
-  { title: 'Resources', group: 'Connect', href: 'resources.html' },
-  { title: 'Contact', group: 'Connect', href: 'contact.html' },
+  { title: 'Home', group: 'Main', href: '/' },
+  { title: 'Lifestyle', group: 'Category', href: '/lifestyle' },
+  { title: 'Fashion', group: 'Category', href: '/fashion' },
+  { title: 'Faith', group: 'Category', href: '/faith' },
+  { title: 'Beauty', group: 'Category', href: '/beauty' },
+  { title: 'Latest Posts', group: 'Section', href: '/#blog' },
+  { title: 'All Posts', group: 'Section', href: '/blog' },
+  { title: 'About Nana Yaa', group: 'Section', href: '/about' },
+  { title: 'Shop My Faves', group: 'Connect', href: '/faves' },
+  { title: 'Work With Me', group: 'Connect', href: '/work-with-me' },
+  { title: 'Press & Media', group: 'Connect', href: '/press' },
+  { title: 'Resources', group: 'Connect', href: '/resources' },
+  { title: 'Contact', group: 'Connect', href: '/contact' },
 ];
 
 let searchOverlay;
@@ -265,7 +265,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     const card = document.createElement('article');
     card.className = 'post-card reveal admin-post';
     card.innerHTML = `
-      <a href="post.html?id=${esc(post.id)}" class="post-card-link" style="display:block;text-decoration:none;color:inherit;">
+      <a href="/post?id=${esc(post.id)}" class="post-card-link" style="display:block;text-decoration:none;color:inherit;">
         <div class="post-img-wrap">
           ${post.image
             ? `<img src="${esc(post.image)}" alt="${esc(post.title)}" loading="lazy" />`
@@ -286,5 +286,56 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     grid.appendChild(card);
     // Observe the new card for reveal animation
     revealObserver.observe(card);
+  });
+})();
+
+// ── Live per-category post counts (e.g. homepage "Explore by Category") ───
+(async function renderCategoryCounts() {
+  const spans = document.querySelectorAll('[data-cat-count]');
+  if (!spans.length || typeof supabaseClient === 'undefined') return;
+
+  const { data, error } = await supabaseClient.from('posts').select('category').eq('status', 'published');
+  if (error || !data) return;
+
+  const counts = {};
+  data.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
+
+  spans.forEach(span => {
+    const cat = span.dataset.catCount;
+    const n = counts[cat] || 0;
+    span.textContent = n ? `${n} post${n !== 1 ? 's' : ''}` : 'coming soon';
+  });
+})();
+
+// ── Live social links + follower counts (editable in admin) ───────────────
+(async function renderSocialLinks() {
+  if (typeof supabaseClient === 'undefined') return;
+
+  const { data, error } = await supabaseClient.from('social_links').select('*');
+  if (error || !data) return;
+
+  const byId = {};
+  data.forEach(l => { byId[l.id] = l; });
+
+  // Every social icon site-wide (footer, about section, etc.) is matched by
+  // its existing aria-label — no extra markup needed for the icon links.
+  const labelMap = { Instagram: 'instagram', TikTok: 'tiktok', YouTube: 'youtube', Pinterest: 'pinterest', Twitter: 'twitter' };
+  document.querySelectorAll('a[aria-label]').forEach(a => {
+    const id = labelMap[a.getAttribute('aria-label')];
+    if (id && byId[id]?.url) a.href = byId[id].url;
+  });
+
+  // Explicit hooks for follower counts, handles, and CTA links.
+  document.querySelectorAll('[data-social-count]').forEach(el => {
+    const l = byId[el.dataset.socialCount];
+    if (l?.followers) el.textContent = l.followers;
+  });
+  document.querySelectorAll('[data-social-handle]').forEach(el => {
+    const l = byId[el.dataset.socialHandle];
+    if (l?.handle) el.textContent = l.handle;
+  });
+  document.querySelectorAll('[data-social-link]').forEach(el => {
+    const l = byId[el.dataset.socialLink];
+    if (l?.url) el.href = l.url;
   });
 })();

@@ -305,7 +305,8 @@
       <button class="sb-link" data-nav="import"><i class="fas fa-file-import"></i> Import Posts</button>
       <button class="sb-link" data-nav="settings"><i class="fas fa-cog"></i> Settings</button>
       <div class="sb-section">Site</div>
-      <a href="index.html" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
+      <button class="sb-link" data-nav="social"><i class="fas fa-share-nodes"></i> Social Links</button>
+      <a href="/" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
     </nav>
     <div class="sb-bottom">
       <div class="sb-user">
@@ -678,6 +679,13 @@
       </div>
     </div>
 
+    <!-- ── SOCIAL LINKS ── -->
+    <div id="panelSocial" class="panel hidden">
+      <div class="settings-grid" id="socialLinksGrid">
+        <div class="empty-state"><i class="fas fa-share-nodes"></i>Loading…</div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -824,6 +832,20 @@ const LeadsDB = {
   },
 };
 
+/* ── SOCIAL LINKS (URLs + follower counts) ──────────────── */
+const SocialDB = {
+  async getLinks() {
+    const { data, error } = await supabaseClient.from('social_links').select('*').order('sort_order', { ascending: true });
+    if (error) { toast('Could not load social links: ' + error.message, 'error'); return []; }
+    return data;
+  },
+  async updateLink(id, data) {
+    const { error } = await supabaseClient.from('social_links').update(data).eq('id', id);
+    if (error) { toast('Could not save ' + id + ': ' + error.message, 'error'); return false; }
+    return true;
+  },
+};
+
 /* ── AUTH (Supabase) ────────────────────────────────────── */
 const Auth = {
   async isLoggedIn() {
@@ -861,7 +883,7 @@ async function nav(view, id=null) {
   if (panel) panel.classList.remove('hidden');
   const link = document.querySelector(`.sb-link[data-nav="${view}"]`);
   if (link) link.classList.add('active');
-  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads'};
+  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links'};
   document.getElementById('topbarLabel').innerHTML = `<strong>${labels[view]||view}</strong>`;
   if (view==='dashboard')   await renderDashboard();
   if (view==='posts')       await renderPostsTable();
@@ -870,6 +892,7 @@ async function nav(view, id=null) {
   if (view==='faves')       await renderFavesTable();
   if (view==='faveEditor')  await initFaveEditor(id);
   if (view==='leads')       await renderLeadsTable();
+  if (view==='social')      await renderSocialPanel();
 }
 
 /* ── DASHBOARD ──────────────────────────────────────────── */
@@ -908,7 +931,7 @@ function postRows(posts) {
       <td style="white-space:nowrap;font-size:12px;color:var(--muted);">${fmtDate(p.publishedAt||p.createdAt)}</td>
       <td><div class="action-btns">
         <button class="btn-icon" onclick="nav('editor','${p.id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-        <a class="btn-icon" href="post.html?id=${p.id}" target="_blank" title="Preview"><i class="fas fa-eye"></i></a>
+        <a class="btn-icon" href="/post?id=${p.id}" target="_blank" title="Preview"><i class="fas fa-eye"></i></a>
         <button class="btn-icon del" onclick="confirmDel('${p.id}')" title="Delete"><i class="fas fa-trash"></i></button>
       </div></td>
     </tr>`).join('')}
@@ -1056,6 +1079,35 @@ function exportLeadsCSV(leads) {
   a.href = URL.createObjectURL(blob);
   a.download = `nanayaa-leads-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+}
+
+/* ── SOCIAL LINKS PANEL ─────────────────────────────────── */
+const SOCIAL_ICONS = { instagram:'fa-instagram', tiktok:'fa-tiktok', youtube:'fa-youtube', pinterest:'fa-pinterest', twitter:'fa-x-twitter' };
+
+async function renderSocialPanel() {
+  const links = await SocialDB.getLinks();
+  const grid = document.getElementById('socialLinksGrid');
+  if (!links.length) { grid.innerHTML = `<div class="empty-state"><i class="fas fa-share-nodes"></i>No social links found. Run the setup SQL first.</div>`; return; }
+
+  grid.innerHTML = links.map(l => `
+    <div class="s-card" data-social-card="${l.id}">
+      <div class="e-section-label"><i class="fab ${SOCIAL_ICONS[l.id]||'fa-link'}"></i> ${esc(l.platform)}</div>
+      <div class="s-body">
+        <div class="s-field"><label class="s-lbl">Profile URL</label><input type="text" class="s-in" data-field="url" value="${esc(l.url||'')}" placeholder="https://instagram.com/…" /></div>
+        <div class="s-field"><label class="s-lbl">Handle</label><input type="text" class="s-in" data-field="handle" value="${esc(l.handle||'')}" placeholder="@yourhandle" /></div>
+        <div class="s-field"><label class="s-lbl">Followers</label><input type="text" class="s-in" data-field="followers" value="${esc(l.followers||'')}" placeholder="e.g. 250k" /></div>
+        <button class="btn btn-primary btn-sm" style="align-self:flex-start;" onclick="saveSocialLink('${l.id}')">Save ${esc(l.platform)}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function saveSocialLink(id) {
+  const card = document.querySelector(`[data-social-card="${id}"]`);
+  const data = {};
+  card.querySelectorAll('[data-field]').forEach(el => { data[el.dataset.field] = el.value.trim(); });
+  const ok = await SocialDB.updateLink(id, data);
+  if (ok) toast(`${id[0].toUpperCase()+id.slice(1)} updated!`, 'success');
 }
 
 /* ── EDITOR ─────────────────────────────────────────────── */
