@@ -320,6 +320,15 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   const byId = {};
   data.forEach(l => { byId[l.id] = l; });
 
+  // A URL typed without "https://" (e.g. "instagram.com/you") is a valid
+  // relative link as far as the browser is concerned, so it'd silently
+  // point back at this site instead of Instagram. Normalize it here so it
+  // always works regardless of how it was entered in the admin panel.
+  const normalizeUrl = url => {
+    if (!url || url === '#') return '';
+    return /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`;
+  };
+
   // Every social icon site-wide (footer, about section, etc.) is matched by
   // its existing aria-label — no extra markup needed for the icon links.
   // Platforms with no real profile URL set are hidden instead of showing a
@@ -328,8 +337,8 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   document.querySelectorAll('a[aria-label]').forEach(a => {
     const id = labelMap[a.getAttribute('aria-label')];
     if (!id) return;
-    const url = byId[id]?.url;
-    if (url && url !== '#') {
+    const url = normalizeUrl(byId[id]?.url);
+    if (url) {
       a.href = url;
     } else {
       a.style.display = 'none';
@@ -346,8 +355,8 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     if (l?.handle) el.textContent = l.handle;
   });
   document.querySelectorAll('[data-social-link]').forEach(el => {
-    const l = byId[el.dataset.socialLink];
-    if (l?.url) el.href = l.url;
+    const url = normalizeUrl(byId[el.dataset.socialLink]?.url);
+    if (url) el.href = url;
   });
 })();
 

@@ -790,6 +790,22 @@ const fmtDate = iso => { try { return new Date(iso).toLocaleDateString('en-US',{
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const wordCount = html => stripHtml(html).split(/\s+/).filter(Boolean).length;
 
+/* ── IMAGE UPLOADS (real file storage, not base64-in-database) ──────────── */
+// Uploads to the 'images' Supabase Storage bucket and returns a short public
+// URL. Embedding whole images as base64 text directly in the database
+// silently truncates/corrupts large files, so every uploader uses this.
+async function uploadImageFile(file) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `${uid()}.${ext}`;
+  const { error } = await supabaseClient.storage.from('images').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  });
+  if (error) { toast('Upload failed: ' + error.message, 'error'); return null; }
+  const { data } = supabaseClient.storage.from('images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 /* ── STORAGE (Supabase-backed) ──────────────────────────── */
 // Normalizes DB snake_case columns to the camelCase shape the rest of
 // this dashboard already expects, so nothing downstream has to change.
@@ -1663,16 +1679,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Editor: featured image file
-  document.getElementById('eImgFile').addEventListener('change',e=>{
+  document.getElementById('eImgFile').addEventListener('change', async e=>{
     const file = e.target.files[0]; if(!file) return;
-    const r = new FileReader();
-    r.onload = ev => {
-      document.getElementById('eImgUrl').value = ev.target.result;
-      const prev = document.getElementById('imgPrev');
-      prev.src = ev.target.result;
-      prev.className = 'feat-prev show';
-    };
-    r.readAsDataURL(file);
+    toast('Uploading image…','success');
+    const url = await uploadImageFile(file);
+    if (!url) return;
+    document.getElementById('eImgUrl').value = url;
+    const prev = document.getElementById('imgPrev');
+    prev.src = url;
+    prev.className = 'feat-prev show';
   });
 
   // Editor: auto-calc read time
@@ -1700,16 +1715,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Fave editor: image file upload
-  document.getElementById('fvImgFile').addEventListener('change',e=>{
+  document.getElementById('fvImgFile').addEventListener('change', async e=>{
     const file = e.target.files[0]; if(!file) return;
-    const r = new FileReader();
-    r.onload = ev => {
-      document.getElementById('fvImgUrl').value = ev.target.result;
-      const prev = document.getElementById('fvImgPrev');
-      prev.src = ev.target.result;
-      prev.className = 'feat-prev show';
-    };
-    r.readAsDataURL(file);
+    toast('Uploading image…','success');
+    const url = await uploadImageFile(file);
+    if (!url) return;
+    document.getElementById('fvImgUrl').value = url;
+    const prev = document.getElementById('fvImgPrev');
+    prev.src = url;
+    prev.className = 'feat-prev show';
   });
 
   // Faves table: filters
@@ -1740,16 +1754,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Instagram photo editor: image file upload
-  document.getElementById('igImgFile').addEventListener('change',e=>{
+  document.getElementById('igImgFile').addEventListener('change', async e=>{
     const file = e.target.files[0]; if(!file) return;
-    const r = new FileReader();
-    r.onload = ev => {
-      document.getElementById('igImgUrl').value = ev.target.result;
-      const prev = document.getElementById('igImgPrev');
-      prev.src = ev.target.result;
-      prev.className = 'feat-prev show';
-    };
-    r.readAsDataURL(file);
+    toast('Uploading image…','success');
+    const url = await uploadImageFile(file);
+    if (!url) return;
+    document.getElementById('igImgUrl').value = url;
+    const prev = document.getElementById('igImgPrev');
+    prev.src = url;
+    prev.className = 'feat-prev show';
   });
 
   // Leads: export CSV
