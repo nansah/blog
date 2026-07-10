@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Nana Yaa Ansah</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --gold: #c9a96e;
+      --gold-light: #e8d5b7;
+      --gold-dim: rgba(201,169,110,0.14);
+      --sidebar: #0f1117;
+      --sidebar-hover: #181c28;
+      --sidebar-active: #1e2236;
+      --sidebar-border: rgba(255,255,255,0.07);
+      --content-bg: #f3f4f6;
+      --white: #fff;
+      --black: #0a0a0a;
+      --off-black: #111;
+      --muted: #6b6966;
+      --border: #e8e5e0;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --sh: 0 1px 3px rgba(0,0,0,.1);
+      --shm: 0 4px 16px rgba(0,0,0,.12);
+      --ease: cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: var(--font-sans); font-size: 14px; color: var(--black); background: var(--content-bg); overflow: hidden; }
+    a { text-decoration: none; color: inherit; }
+    button { font-family: inherit; cursor: pointer; }
+    input, textarea, select { font-family: inherit; }
+    .hidden { display: none !important; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── LOGIN ── */
+    .login-screen {
+      position: fixed; inset: 0; z-index: 1000;
+      background: linear-gradient(135deg,#0a0a0a 0%,#1a1208 55%,#0f0f0f 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .login-box {
+      background: var(--white); border-radius: 18px;
+      padding: 52px 48px; width: 420px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.45);
+    }
+    .login-logo { font-family: var(--font-serif); font-size: 26px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+    .login-sub { font-size: 12px; color: var(--muted); margin-bottom: 36px; }
+    .login-hint { font-size: 11px; color: var(--gold); margin-bottom: 20px; background: var(--gold-dim); padding: 10px 12px; border-radius: 6px; border-left: 3px solid var(--gold); }
+    .login-form { display: flex; flex-direction: column; gap: 16px; }
+    .login-field { display: flex; flex-direction: column; gap: 6px; }
+    .login-field label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #555; }
+    .login-field input { padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: border-color .2s; background: #faf9f7; }
+    .login-field input:focus { border-color: var(--gold); background: #fff; }
+    .login-error { font-size: 12px; color: var(--danger); text-align: center; min-height: 16px; }
+    .login-btn { padding: 13px; background: var(--black); color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transition: background .2s; }
+    .login-btn:hover { background: var(--gold); }
+
+    /* ── APP LAYOUT ── */
+    .app { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { width: 232px; flex-shrink: 0; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid var(--sidebar-border); overflow-y: auto; }
+    .sb-brand { padding: 22px 18px 18px; border-bottom: 1px solid var(--sidebar-border); }
+    .sb-brand-name { font-family: var(--font-serif); font-size: 17px; font-weight: 700; color: #fff; display: block; margin-bottom: 3px; }
+    .sb-brand-sub { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--gold); }
+    .sb-nav { padding: 14px 10px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .sb-section { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: rgba(255,255,255,.25); padding: 12px 8px 5px; }
+    .sb-link {
+      display: flex; align-items: center; gap: 10px; padding: 9px 11px;
+      border-radius: 7px; font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,.55); transition: all .18s;
+      cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+    }
+    .sb-link:hover { background: var(--sidebar-hover); color: #fff; }
+    .sb-link.active { background: var(--sidebar-active); color: #fff; }
+    .sb-link.active i { color: var(--gold); }
+    .sb-link i { width: 15px; font-size: 12px; color: rgba(255,255,255,.32); text-align: center; flex-shrink: 0; }
+    .sb-link.accent { color: var(--gold-light); }
+    .sb-link.accent i { color: var(--gold); }
+    .sb-bottom { padding: 14px 10px; border-top: 1px solid var(--sidebar-border); }
+    .sb-user { display: flex; align-items: center; gap: 10px; padding: 8px; margin-bottom: 6px; }
+    .sb-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .sb-name { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.2; }
+    .sb-role { font-size: 10px; color: rgba(255,255,255,.32); }
+
+    /* ── MAIN ── */
+    .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 26px; height: 58px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 10; box-shadow: var(--sh); }
+    .topbar-crumb { font-size: 13px; color: var(--muted); }
+    .topbar-crumb strong { color: var(--black); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .panel { flex: 1; padding: 28px 26px; }
+
+    /* ── BUTTONS ── */
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 7px; font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; border: 1.5px solid transparent; transition: all .18s; white-space: nowrap; }
+    .btn-primary { background: var(--black); color: #fff; border-color: var(--black); }
+    .btn-primary:hover { background: var(--gold); border-color: var(--gold); }
+    .btn-gold { background: var(--gold); color: #fff; border-color: var(--gold); }
+    .btn-gold:hover { background: var(--black); border-color: var(--black); }
+    .btn-outline { background: transparent; color: var(--black); border-color: var(--border); }
+    .btn-outline:hover { border-color: var(--black); }
+    .btn-danger { background: transparent; color: var(--danger); border-color: rgba(239,68,68,.28); }
+    .btn-danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .btn-sm { padding: 6px 12px; font-size: 10px; }
+    .btn-icon { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); transition: all .18s; cursor: pointer; }
+    .btn-icon:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-icon.del:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── STATS ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--white); border-radius: 12px; padding: 18px 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+    .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .si-gold { background: var(--gold-dim); color: var(--gold); }
+    .si-green { background: rgba(34,197,94,.1); color: #22c55e; }
+    .si-blue { background: rgba(59,130,246,.1); color: #3b82f6; }
+    .si-purple { background: rgba(168,85,247,.1); color: #a855f7; }
+    .stat-num { font-size: 24px; font-weight: 700; color: var(--black); line-height: 1; margin-bottom: 3px; }
+    .stat-lbl { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+    /* ── TABLE ── */
+    .table-wrap { background: var(--white); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .table-head { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .table-title { font-size: 14px; font-weight: 700; color: var(--black); }
+    .table-filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .f-select, .f-input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--black); background: var(--white); outline: none; transition: border-color .18s; }
+    .f-select:focus, .f-input:focus { border-color: var(--gold); }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 9px 16px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); border-bottom: 1px solid var(--border); background: #fafaf9; white-space: nowrap; }
+    td { padding: 12px 16px; font-size: 13px; color: var(--black); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafaf9; }
+    .t-title { font-weight: 600; max-width: 300px; }
+    .t-title small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; font-family: monospace; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+    .b-published { background: rgba(34,197,94,.1); color: #15803d; }
+    .b-draft { background: rgba(245,158,11,.1); color: #b45309; }
+    .b-cat { background: var(--gold-dim); color: #92660a; }
+    .action-btns { display: flex; gap: 5px; align-items: center; }
+    .empty-state { padding: 48px; text-align: center; color: var(--muted); font-size: 13px; }
+    .empty-state i { font-size: 30px; margin-bottom: 12px; display: block; color: var(--gold-light); }
+
+    /* ── EDITOR ── */
+    .editor-wrap { display: grid; grid-template-columns: 1fr 272px; gap: 18px; align-items: start; }
+    .editor-left { display: flex; flex-direction: column; gap: 14px; }
+    .e-card { background: var(--white); border-radius: 11px; border: 1px solid var(--border); overflow: hidden; }
+    .e-card-pad { padding: 18px 22px; }
+    .e-section-label { padding: 10px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); background: #fafaf9; border-bottom: 1px solid var(--border); }
+    .editor-title { width: 100%; font-family: var(--font-serif); font-size: 26px; font-weight: 700; color: var(--black); border: none; outline: none; background: transparent; line-height: 1.25; }
+    .editor-title::placeholder { color: #ccc; }
+    .slug-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+    .slug-row input { flex: 1; font-size: 12px; color: var(--muted); border: none; border-bottom: 1px dashed var(--border); background: transparent; outline: none; padding: 2px 0; font-family: monospace; }
+    .toolbar { display: flex; align-items: center; gap: 2px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: #fafaf9; flex-wrap: wrap; }
+    .tb { width: 28px; height: 26px; border-radius: 5px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); cursor: pointer; transition: all .15s; }
+    .tb:hover { background: var(--border); color: var(--black); }
+    .tb.on { background: var(--black); color: #fff; }
+    .tb-sep { width: 1px; height: 18px; background: var(--border); margin: 0 3px; flex-shrink: 0; }
+    .tb-sel { height: 26px; padding: 0 7px; border: 1px solid var(--border); border-radius: 5px; font-size: 12px; color: var(--black); background: var(--white); outline: none; cursor: pointer; }
+    .editor-body {
+      min-height: 360px; padding: 22px; outline: none;
+      font-size: 15px; line-height: 1.78; color: var(--black);
+    }
+    .editor-body:empty::before { content: attr(data-placeholder); color: #ccc; pointer-events: none; }
+    .editor-body h1,.editor-body h2,.editor-body h3 { font-family: var(--font-serif); margin: 22px 0 10px; line-height: 1.2; }
+    .editor-body h1 { font-size: 28px; } .editor-body h2 { font-size: 22px; } .editor-body h3 { font-size: 18px; }
+    .editor-body p { margin-bottom: 12px; }
+    .editor-body blockquote { border-left: 3px solid var(--gold); padding-left: 16px; color: var(--muted); font-style: italic; margin: 14px 0; }
+    .editor-body ul,.editor-body ol { padding-left: 22px; margin-bottom: 12px; }
+    .editor-body li { margin-bottom: 4px; }
+    .editor-body img { max-width: 100%; border-radius: 7px; margin: 10px 0; display: block; }
+    .editor-body a { color: var(--gold); text-decoration: underline; }
+    .excerpt-ta { width: 100%; padding: 14px; border: none; resize: vertical; font-size: 13px; color: var(--muted); line-height: 1.7; outline: none; min-height: 80px; background: transparent; }
+    .excerpt-ta::placeholder { color: #ccc; }
+
+    /* ── META SIDEBAR ── */
+    .meta-sb { display: flex; flex-direction: column; gap: 12px; }
+    .meta-card { background: var(--white); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+    .meta-head { padding: 10px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); border-bottom: 1px solid var(--border); background: #fafaf9; }
+    .meta-body { padding: 13px 14px; display: flex; flex-direction: column; gap: 11px; }
+    .meta-field { display: flex; flex-direction: column; gap: 5px; }
+    .meta-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+    .meta-in, .meta-sel { padding: 7px 9px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; color: var(--black); background: var(--white); outline: none; width: 100%; transition: border-color .18s; }
+    .meta-in:focus, .meta-sel:focus { border-color: var(--gold); }
+    .feat-prev { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 7px; display: none; margin-top: 8px; }
+    .feat-prev.show { display: block; }
+    .status-ind { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+    .s-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .s-dot.published { background: var(--success); }
+    .s-dot.draft { background: var(--warning); }
+    .pub-btns { display: flex; flex-direction: column; gap: 7px; }
+    .pb { width: 100%; padding: 10px; border-radius: 7px; border: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; transition: all .18s; }
+    .pb.primary { background: var(--black); color: #fff; }
+    .pb.primary:hover { background: var(--gold); }
+    .pb.draft { background: transparent; color: var(--black); border: 1.5px solid var(--border); }
+    .pb.draft:hover { border-color: var(--black); }
+    .file-input { font-size: 12px; color: var(--muted); width: 100%; }
+
+    /* ── IMPORT ── */
+    .import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+    .drop-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 44px 22px; text-align: center; cursor: pointer; transition: all .2s; background: var(--white); }
+    .drop-zone:hover,.drop-zone.over { border-color: var(--gold); background: rgba(201,169,110,.04); }
+    .drop-zone i { font-size: 34px; color: var(--gold-light); margin-bottom: 12px; display: block; }
+    .drop-zone h3 { font-size: 14px; font-weight: 700; color: var(--black); margin-bottom: 5px; }
+    .drop-zone p { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+    .import-preview { background: var(--white); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .ip-head { padding: 13px 17px; border-bottom: 1px solid var(--border); background: #fafaf9; display: flex; align-items: center; justify-content: space-between; }
+    .ip-title { font-size: 13px; font-weight: 700; color: var(--black); }
+    .ip-list { max-height: 420px; overflow-y: auto; }
+    .ip-item { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 11px; }
+    .ip-item:last-child { border-bottom: none; }
+    .ip-cb { margin-top: 2px; accent-color: var(--gold); flex-shrink: 0; }
+    .ip-ttl { font-size: 13px; font-weight: 600; color: var(--black); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+    .ip-meta { font-size: 11px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    pre.code-example { font-size: 11px; color: var(--muted); line-height: 1.6; background: #f7f6f3; padding: 12px 14px; border-radius: 7px; overflow-x: auto; border: 1px solid var(--border); }
+
+    /* ── SETTINGS ── */
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; max-width: 700px; }
+    .s-card { background: var(--white); border-radius: 11px; border: 1px solid var(--border); overflow: hidden; }
+    .s-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .s-field { display: flex; flex-direction: column; gap: 6px; }
+    .s-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+    .s-in { padding: 9px 11px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; color: var(--black); background: var(--white); outline: none; width: 100%; transition: border-color .18s; }
+    .s-in:focus { border-color: var(--gold); }
+
+    /* ── TOAST ── */
+    .toast-wrap { position: fixed; bottom: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column; gap: 7px; }
+    .toast { background: var(--black); color: #fff; padding: 11px 16px; border-radius: 8px; font-size: 13px; display: flex; align-items: center; gap: 9px; box-shadow: var(--shm); transform: translateX(130%); transition: transform .3s var(--ease); min-width: 200px; max-width: 320px; }
+    .toast.show { transform: translateX(0); }
+    .toast.success i { color: var(--success); }
+    .toast.error i { color: var(--danger); }
+    .toast.warning i { color: var(--warning); }
+
+    /* ── MODAL ── */
+    .modal-bg { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,.48); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal { background: var(--white); border-radius: 14px; padding: 28px 28px 24px; width: 420px; box-shadow: var(--shm); }
+    .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+    .modal p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 22px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .editor-wrap { grid-template-columns: 1fr; }
+      .meta-sb { flex-direction: row; flex-wrap: wrap; }
+      .meta-card { flex: 1; min-width: 200px; }
+    }
+    @media (max-width: 860px) {
+      .stats-row { grid-template-columns: repeat(2,1fr); }
+      .import-grid { grid-template-columns: 1fr; }
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .sidebar { width: 200px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════════ -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Nana Yaa Ansah</div>
+    <div class="login-sub">Content Admin Dashboard</div>
+    <form class="login-form" id="loginForm" novalidate>
+      <div class="login-field">
+        <label>Email</label>
+        <input type="email" id="loginUser" placeholder="you@example.com" autocomplete="username" />
+      </div>
+      <div class="login-field">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="login-btn">Sign In <i class="fas fa-arrow-right" style="margin-left:6px;"></i></button>
+    </form>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════════ -->
+<div id="appScreen" class="app hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <span class="sb-brand-name">Nana Yaa Ansah</span>
+      <span class="sb-brand-sub">Content Studio</span>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Content</div>
+      <button class="sb-link active" data-nav="dashboard"><i class="fas fa-chart-bar"></i> Dashboard</button>
+      <button class="sb-link" data-nav="posts"><i class="fas fa-file-alt"></i> All Posts</button>
+      <button class="sb-link" data-nav="editor"><i class="fas fa-plus-circle"></i> New Post</button>
+      <div class="sb-section">Shop</div>
+      <button class="sb-link" data-nav="faves"><i class="fas fa-heart"></i> Shop My Faves</button>
+      <button class="sb-link" data-nav="faveEditor"><i class="fas fa-plus-circle"></i> New Fave</button>
+      <div class="sb-section">Tools</div>
+      <button class="sb-link" data-nav="leads"><i class="fas fa-envelope-open-text"></i> Resource Leads</button>
+      <button class="sb-link" data-nav="import"><i class="fas fa-file-import"></i> Import Posts</button>
+      <button class="sb-link" data-nav="settings"><i class="fas fa-cog"></i> Settings</button>
+      <div class="sb-section">Site</div>
+      <a href="index.html" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-avatar" id="avatarInitial">N</div>
+        <div>
+          <div class="sb-name" id="sbUserName">Nana Yaa</div>
+          <div class="sb-role">Editor</div>
+        </div>
+      </div>
+      <button class="sb-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-crumb"><span id="topbarLabel"><strong>Dashboard</strong></span></div>
+      <div class="topbar-right">
+        <button class="btn btn-gold btn-sm" data-nav="editor"><i class="fas fa-plus"></i> New Post</button>
+      </div>
+    </div>
+
+    <!-- ── DASHBOARD ── -->
+    <div id="panelDashboard" class="panel">
+      <div class="stats-row" id="statsRow"></div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title">Recent Posts</span>
+          <button class="btn btn-outline btn-sm" data-nav="posts">View All</button>
+        </div>
+        <div id="dashPostsTable"></div>
+      </div>
+    </div>
+
+    <!-- ── POSTS ── -->
+    <div id="panelPosts" class="panel hidden">
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title">All Posts</span>
+          <div class="table-filters">
+            <select class="f-select" id="fStatus"><option value="">All Statuses</option><option value="published">Published</option><option value="draft">Draft</option></select>
+            <select class="f-select" id="fCat"><option value="">All Categories</option><option>Lifestyle</option><option>Fashion</option><option>Faith</option><option>Beauty</option><option>Creator Life</option></select>
+            <input class="f-input" id="fSearch" placeholder="Search…" style="width:160px;" />
+          </div>
+        </div>
+        <div id="postsTableBody"></div>
+      </div>
+    </div>
+
+    <!-- ── EDITOR ── -->
+    <div id="panelEditor" class="panel hidden">
+      <div class="editor-wrap">
+
+        <!-- LEFT -->
+        <div class="editor-left">
+
+          <!-- Title & Slug -->
+          <div class="e-card e-card-pad">
+            <input id="eTitle" class="editor-title" type="text" placeholder="Post title…" />
+            <div class="slug-row">
+              <span style="flex-shrink:0;">Slug:</span>
+              <input id="eSlug" type="text" placeholder="post-slug" />
+              <button class="btn btn-outline btn-sm" id="btnGenSlug">Generate</button>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="e-card">
+            <div class="toolbar">
+              <select class="tb-sel" id="tbFormat" title="Format">
+                <option value="">Paragraph</option>
+                <option value="H1">Heading 1</option>
+                <option value="H2">Heading 2</option>
+                <option value="H3">Heading 3</option>
+                <option value="BLOCKQUOTE">Blockquote</option>
+                <option value="PRE">Code</option>
+              </select>
+              <div class="tb-sep"></div>
+              <button class="tb" data-cmd="bold" title="Bold"><i class="fas fa-bold"></i></button>
+              <button class="tb" data-cmd="italic" title="Italic"><i class="fas fa-italic"></i></button>
+              <button class="tb" data-cmd="underline" title="Underline"><i class="fas fa-underline"></i></button>
+              <button class="tb" data-cmd="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+              <div class="tb-sep"></div>
+              <button class="tb" data-cmd="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+              <button class="tb" data-cmd="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+              <div class="tb-sep"></div>
+              <button class="tb" id="tbLink" title="Insert Link"><i class="fas fa-link"></i></button>
+              <button class="tb" id="tbImg" title="Insert Image"><i class="fas fa-image"></i></button>
+              <button class="tb" id="tbHR" title="Divider"><i class="fas fa-minus"></i></button>
+              <div class="tb-sep"></div>
+              <button class="tb" data-cmd="undo" title="Undo"><i class="fas fa-undo"></i></button>
+              <button class="tb" data-cmd="redo" title="Redo"><i class="fas fa-redo"></i></button>
+              <div class="tb-sep"></div>
+              <button class="tb" id="tbHtml" title="View HTML source" style="font-size:10px;width:auto;padding:0 6px;">HTML</button>
+            </div>
+            <div id="eContent" class="editor-body" contenteditable="true" data-placeholder="Start writing your post…" spellcheck="true"></div>
+          </div>
+
+          <!-- Source editor (hidden by default) -->
+          <div class="e-card hidden" id="htmlSourceWrap">
+            <div class="e-section-label">HTML Source</div>
+            <textarea id="htmlSource" style="width:100%;min-height:200px;padding:14px;border:none;font-family:monospace;font-size:12px;line-height:1.6;resize:vertical;outline:none;color:var(--muted);background:#fafaf9;"></textarea>
+          </div>
+
+          <!-- Excerpt -->
+          <div class="e-card">
+            <div class="e-section-label">Excerpt</div>
+            <textarea id="eExcerpt" class="excerpt-ta" placeholder="Short summary for post cards (auto-generated from content if left empty)…"></textarea>
+          </div>
+        </div>
+
+        <!-- RIGHT META -->
+        <div class="meta-sb">
+
+          <!-- Publish -->
+          <div class="meta-card">
+            <div class="meta-head">Publish</div>
+            <div class="meta-body">
+              <div class="status-ind"><div class="s-dot draft" id="sDot"></div><span id="sLabel">Draft</span></div>
+              <div class="meta-field">
+                <span class="meta-lbl">Status</span>
+                <select class="meta-sel" id="eStatus"><option value="draft">Draft</option><option value="published">Published</option></select>
+              </div>
+              <div class="meta-field">
+                <span class="meta-lbl">Publish Date</span>
+                <input type="datetime-local" class="meta-in" id="eDate" />
+              </div>
+              <div class="pub-btns">
+                <button class="pb primary" id="btnPublish">Publish</button>
+                <button class="pb draft" id="btnDraft">Save Draft</button>
+              </div>
+              <button class="btn btn-danger btn-sm hidden" id="btnDelete" style="width:100%;justify-content:center;margin-top:4px;">
+                <i class="fas fa-trash"></i> Delete Post
+              </button>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="meta-card">
+            <div class="meta-head">Category</div>
+            <div class="meta-body">
+              <select class="meta-sel" id="eCat">
+                <option value="">Select category…</option>
+                <option>Lifestyle</option><option>Fashion</option><option>Faith</option>
+                <option>Beauty</option><option>Creator Life</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="meta-card">
+            <div class="meta-head">Tags</div>
+            <div class="meta-body">
+              <input class="meta-in" id="eTags" placeholder="nyc, style, travel (comma-separated)" />
+            </div>
+          </div>
+
+          <!-- Featured Image -->
+          <div class="meta-card">
+            <div class="meta-head">Featured Image</div>
+            <div class="meta-body">
+              <div class="meta-field">
+                <span class="meta-lbl">Image URL</span>
+                <input class="meta-in" id="eImgUrl" placeholder="https://…" />
+              </div>
+              <div class="meta-field">
+                <span class="meta-lbl">Or upload</span>
+                <input type="file" id="eImgFile" accept="image/*" class="file-input" />
+              </div>
+              <img id="imgPrev" class="feat-prev" src="" alt="" />
+            </div>
+          </div>
+
+          <!-- Read Time -->
+          <div class="meta-card">
+            <div class="meta-head">Read Time</div>
+            <div class="meta-body">
+              <input class="meta-in" id="eReadTime" placeholder="e.g. 5 min read" />
+              <button class="btn btn-outline btn-sm" id="btnCalcRead" style="align-self:flex-start;">Auto-calculate</button>
+            </div>
+          </div>
+
+        </div><!-- /meta-sb -->
+      </div>
+    </div>
+
+    <!-- ── IMPORT ── -->
+    <div id="panelImport" class="panel hidden">
+      <div class="import-grid">
+
+        <!-- Left: upload + format info -->
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="e-card e-card-pad">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Supported Formats</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.75;">
+              <strong>WordPress XML / WXR</strong> — Export via WP Admin → Tools → Export (All content or Posts only)<br/>
+              <strong>JSON array</strong> — Array of post objects (see example below)<br/>
+              <strong>WordPress REST API JSON</strong> — Auto-detected
+            </div>
+          </div>
+
+          <div class="drop-zone" id="dropZone">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <h3>Drop export file here</h3>
+            <p>WordPress XML (.xml / .wxr) or JSON (.json)<br/>Max 50MB</p>
+            <button class="btn btn-outline" onclick="event.stopPropagation();document.getElementById('importFile').click();">
+              <i class="fas fa-folder-open"></i> Browse File
+            </button>
+            <input type="file" id="importFile" accept=".xml,.json,.wxr" style="display:none;" />
+          </div>
+
+          <div class="e-card e-card-pad">
+            <div style="font-size:12px;font-weight:700;margin-bottom:10px;">JSON Format</div>
+            <pre class="code-example">[
+  {
+    "title": "My Post Title",
+    "content": "&lt;p&gt;HTML content...&lt;/p&gt;",
+    "excerpt": "Short summary",
+    "category": "Lifestyle",
+    "date": "2025-06-01",
+    "image": "https://example.com/img.jpg",
+    "status": "published",
+    "tags": ["nyc", "style"]
+  }
+]</pre>
+          </div>
+        </div>
+
+        <!-- Right: preview -->
+        <div class="import-preview">
+          <div class="ip-head">
+            <span class="ip-title" id="ipTitle">Import Preview</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:12px;color:var(--muted);" id="ipCount"></span>
+              <button class="btn btn-gold btn-sm hidden" id="btnImport"><i class="fas fa-file-import"></i> Import Selected</button>
+            </div>
+          </div>
+          <div class="ip-list" id="ipList">
+            <div class="empty-state"><i class="fas fa-file-import"></i>Upload a file to preview posts</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div id="panelSettings" class="panel hidden">
+      <div class="settings-grid">
+
+        <div class="s-card">
+          <div class="e-section-label">Change Password</div>
+          <div class="s-body">
+            <div class="s-field"><label class="s-lbl">New Password</label><input type="password" class="s-in" id="sNewPass" placeholder="New password (min 6 chars)" /></div>
+            <div class="s-field"><label class="s-lbl">Confirm New Password</label><input type="password" class="s-in" id="sConfPass" placeholder="Repeat new password" /></div>
+            <button class="btn btn-primary btn-sm" id="btnChangePass" style="align-self:flex-start;">Update Password</button>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="e-section-label">Data Management</div>
+          <div class="s-body">
+            <div style="font-size:12px;color:var(--muted);line-height:1.7;">Posts are stored in your Supabase database and are live for every visitor. Export a JSON backup to keep a copy.</div>
+            <button class="btn btn-outline btn-sm" id="btnExport" style="align-self:flex-start;"><i class="fas fa-download"></i> Export All Posts (JSON)</button>
+            <div style="height:1px;background:var(--border);"></div>
+            <div style="font-size:12px;color:var(--danger);">Danger zone: permanently delete every post for all visitors.</div>
+            <button class="btn btn-danger btn-sm" id="btnNuke" style="align-self:flex-start;"><i class="fas fa-trash"></i> Delete All Posts</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── FAVES LIST ── -->
+    <div id="panelFaves" class="panel hidden">
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title">Shop My Faves</span>
+          <div class="table-filters">
+            <select class="f-select" id="fFaveStatus"><option value="">All Statuses</option><option value="published">Published</option><option value="draft">Draft</option></select>
+            <input class="f-input" id="fFaveSearch" placeholder="Search…" style="width:160px;" />
+          </div>
+        </div>
+        <div id="favesTableBody"></div>
+      </div>
+    </div>
+
+    <!-- ── FAVE EDITOR ── -->
+    <div id="panelFaveEditor" class="panel hidden">
+      <div class="editor-wrap">
+
+        <div class="editor-left">
+          <div class="e-card e-card-pad">
+            <input id="fvTitle" class="editor-title" type="text" placeholder="Product name…" />
+          </div>
+          <div class="e-card e-card-pad" style="display:flex; flex-direction:column; gap:16px;">
+            <div class="meta-field">
+              <span class="meta-lbl">Brand</span>
+              <input class="meta-in" id="fvBrand" placeholder="e.g. Sam Edelman" />
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Price</span>
+              <input class="meta-in" id="fvPrice" placeholder="e.g. $128" />
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Affiliate / Shop Link</span>
+              <input class="meta-in" id="fvUrl" placeholder="https://…" />
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Image URL</span>
+              <input class="meta-in" id="fvImgUrl" placeholder="https://…" />
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Or upload</span>
+              <input type="file" id="fvImgFile" accept="image/*" class="file-input" />
+            </div>
+            <img id="fvImgPrev" class="feat-prev" src="" alt="" />
+          </div>
+        </div>
+
+        <div class="meta-sb">
+          <div class="meta-card">
+            <div class="meta-head">Publish</div>
+            <div class="meta-body">
+              <div class="status-ind"><div class="s-dot draft" id="fvDot"></div><span id="fvLabel">Draft</span></div>
+              <div class="meta-field">
+                <span class="meta-lbl">Status</span>
+                <select class="meta-sel" id="fvStatus"><option value="draft">Draft</option><option value="published">Published</option></select>
+              </div>
+              <div class="pub-btns">
+                <button class="pb primary" id="btnFavePublish">Publish</button>
+                <button class="pb draft" id="btnFaveDraft">Save Draft</button>
+              </div>
+              <button class="btn btn-danger btn-sm hidden" id="btnFaveDelete" style="width:100%;justify-content:center;margin-top:4px;">
+                <i class="fas fa-trash"></i> Delete Fave
+              </button>
+            </div>
+          </div>
+
+          <div class="meta-card">
+            <div class="meta-head">Category</div>
+            <div class="meta-body">
+              <select class="meta-sel" id="fvCat">
+                <option value="">Select category…</option>
+                <option>Fashion</option><option>Beauty</option><option>Home</option><option>Tech</option><option>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="meta-card">
+            <div class="meta-head">Sort Order</div>
+            <div class="meta-body">
+              <input class="meta-in" id="fvSort" type="number" value="0" placeholder="0" />
+              <span style="font-size:11px;color:var(--muted);">Lower numbers show first</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LEADS (Resources page signups) ── -->
+    <div id="panelLeads" class="panel hidden">
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title">Resource Leads</span>
+          <button class="btn btn-outline btn-sm" id="btnExportLeads"><i class="fas fa-download"></i> Export CSV</button>
+        </div>
+        <div id="leadsTableBody"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ── CONFIRM MODAL ── -->
+<div class="modal-bg hidden" id="confirmModal">
+  <div class="modal">
+    <h3 id="mTitle">Are you sure?</h3>
+    <p id="mBody">This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn btn-outline" id="mCancel">Cancel</button>
+      <button class="btn btn-danger" id="mConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase-client.js"></script>
+<script>
+/* ╔═══════════════════════════════════════════════════════╗
+   ║   THE NYC EDIT — Admin Dashboard                      ║
+   ╚═══════════════════════════════════════════════════════╝ */
+
+/* ── UTILITIES ─────────────────────────────────────────── */
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const stripHtml = h => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent||d.innerText||''; };
+const slugify = s => (s||'').toLowerCase().trim().replace(/[^\w\s-]/g,'').replace(/[\s_-]+/g,'-').replace(/^-+|-+$/g,'');
+const fmtDate = iso => { try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return iso?.slice(0,10)||'—'; } };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const wordCount = html => stripHtml(html).split(/\s+/).filter(Boolean).length;
+
+/* ── STORAGE (Supabase-backed) ──────────────────────────── */
+// Normalizes DB snake_case columns to the camelCase shape the rest of
+// this dashboard already expects, so nothing downstream has to change.
+function normalizePost(row) {
+  if (!row) return null;
+  return {
+    ...row,
+    publishedAt: row.published_at,
+    createdAt:   row.created_at,
+    updatedAt:   row.updated_at,
+    readTime:    row.read_time,
+  };
+}
+function denormalizePost(data) {
+  const { readTime, publishedAt, createdAt, updatedAt, ...rest } = data;
+  const out = { ...rest };
+  if (readTime    !== undefined) out.read_time    = readTime;
+  if (publishedAt !== undefined) out.published_at = publishedAt;
+  return out;
+}
+
+const DB = {
+  async getPosts() {
+    const { data, error } = await supabaseClient.from('posts').select('*').order('created_at', { ascending: false });
+    if (error) { toast('Could not load posts: ' + error.message, 'error'); return []; }
+    return data.map(normalizePost);
+  },
+  async getPost(id) {
+    const { data, error } = await supabaseClient.from('posts').select('*').eq('id', id).maybeSingle();
+    if (error) return null;
+    return normalizePost(data);
+  },
+  async createPost(data) {
+    const row = { id: uid(), ...denormalizePost(data) };
+    const { data: inserted, error } = await supabaseClient.from('posts').insert(row).select().single();
+    if (error) { toast('Could not save post: ' + error.message, 'error'); return null; }
+    return normalizePost(inserted);
+  },
+  async createPosts(dataArray) {
+    const rows = dataArray.map(data => ({ id: uid(), ...denormalizePost(data) }));
+    const { data: inserted, error } = await supabaseClient.from('posts').insert(rows).select();
+    if (error) return { inserted: [], error };
+    return { inserted: inserted.map(normalizePost), error: null };
+  },
+  async updatePost(id, data) {
+    const { data: updated, error } = await supabaseClient.from('posts').update(denormalizePost(data)).eq('id', id).select().single();
+    if (error) { toast('Could not save post: ' + error.message, 'error'); return null; }
+    return normalizePost(updated);
+  },
+  async deletePost(id) {
+    const { error } = await supabaseClient.from('posts').delete().eq('id', id);
+    if (error) toast('Could not delete post: ' + error.message, 'error');
+  },
+  async deleteAll() {
+    const { error } = await supabaseClient.from('posts').delete().not('id', 'is', null);
+    if (error) toast('Could not delete posts: ' + error.message, 'error');
+  },
+};
+
+/* ── FAVES (Shop My Faves — Supabase-backed) ────────────── */
+function normalizeFave(row) {
+  if (!row) return null;
+  return { ...row, affiliateUrl: row.affiliate_url, sortOrder: row.sort_order, createdAt: row.created_at, updatedAt: row.updated_at };
+}
+function denormalizeFave(data) {
+  const { affiliateUrl, sortOrder, createdAt, updatedAt, ...rest } = data;
+  const out = { ...rest };
+  if (affiliateUrl !== undefined) out.affiliate_url = affiliateUrl;
+  if (sortOrder    !== undefined) out.sort_order    = sortOrder;
+  return out;
+}
+
+const FaveDB = {
+  async getFaves() {
+    const { data, error } = await supabaseClient.from('faves').select('*').order('sort_order', { ascending: true });
+    if (error) { toast('Could not load faves: ' + error.message, 'error'); return []; }
+    return data.map(normalizeFave);
+  },
+  async getFave(id) {
+    const { data, error } = await supabaseClient.from('faves').select('*').eq('id', id).maybeSingle();
+    if (error) return null;
+    return normalizeFave(data);
+  },
+  async createFave(data) {
+    const row = { id: uid(), ...denormalizeFave(data) };
+    const { data: inserted, error } = await supabaseClient.from('faves').insert(row).select().single();
+    if (error) { toast('Could not save fave: ' + error.message, 'error'); return null; }
+    return normalizeFave(inserted);
+  },
+  async updateFave(id, data) {
+    const { data: updated, error } = await supabaseClient.from('faves').update(denormalizeFave(data)).eq('id', id).select().single();
+    if (error) { toast('Could not save fave: ' + error.message, 'error'); return null; }
+    return normalizeFave(updated);
+  },
+  async deleteFave(id) {
+    const { error } = await supabaseClient.from('faves').delete().eq('id', id);
+    if (error) toast('Could not delete fave: ' + error.message, 'error');
+  },
+};
+
+/* ── LEADS (Resources page signups) ─────────────────────── */
+const LeadsDB = {
+  async getLeads() {
+    const { data, error } = await supabaseClient.from('leads').select('*').order('created_at', { ascending: false });
+    if (error) { toast('Could not load leads: ' + error.message, 'error'); return []; }
+    return data;
+  },
+  async deleteLead(id) {
+    const { error } = await supabaseClient.from('leads').delete().eq('id', id);
+    if (error) toast('Could not delete lead: ' + error.message, 'error');
+  },
+};
+
+/* ── AUTH (Supabase) ────────────────────────────────────── */
+const Auth = {
+  async isLoggedIn() {
+    const { data } = await supabaseClient.auth.getSession();
+    return !!data.session;
+  },
+  async currentEmail() {
+    const { data } = await supabaseClient.auth.getUser();
+    return data.user?.email || '';
+  },
+  async login(email, password) {
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    return error ? error.message : null;
+  },
+  async logout() {
+    await supabaseClient.auth.signOut();
+  },
+};
+
+/* ── STATE ──────────────────────────────────────────────── */
+let curView    = 'dashboard';
+let editingId  = null;
+let importData = [];
+let confirmCb  = null;
+let editingFaveId = null;
+
+/* ── NAVIGATION ─────────────────────────────────────────── */
+async function nav(view, id=null) {
+  curView   = view;
+  if (view === 'editor')     editingId = id;
+  if (view === 'faveEditor') editingFaveId = id;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.add('hidden'));
+  document.querySelectorAll('.sb-link[data-nav]').forEach(l=>l.classList.remove('active'));
+  const panel = document.getElementById('panel'+view[0].toUpperCase()+view.slice(1));
+  if (panel) panel.classList.remove('hidden');
+  const link = document.querySelector(`.sb-link[data-nav="${view}"]`);
+  if (link) link.classList.add('active');
+  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads'};
+  document.getElementById('topbarLabel').innerHTML = `<strong>${labels[view]||view}</strong>`;
+  if (view==='dashboard')   await renderDashboard();
+  if (view==='posts')       await renderPostsTable();
+  if (view==='editor')      await initEditor(id);
+  if (view==='import')      resetImport();
+  if (view==='faves')       await renderFavesTable();
+  if (view==='faveEditor')  await initFaveEditor(id);
+  if (view==='leads')       await renderLeadsTable();
+}
+
+/* ── DASHBOARD ──────────────────────────────────────────── */
+async function renderDashboard() {
+  const all  = await DB.getPosts();
+  const pub  = all.filter(p=>p.status==='published');
+  const drft = all.filter(p=>p.status!=='published');
+  const cats = new Set(all.map(p=>p.category).filter(Boolean));
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-icon si-gold"><i class="fas fa-file-alt"></i></div><div><div class="stat-num">${all.length}</div><div class="stat-lbl">Total Posts</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-num">${pub.length}</div><div class="stat-lbl">Published</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-blue"><i class="fas fa-pencil-alt"></i></div><div><div class="stat-num">${drft.length}</div><div class="stat-lbl">Drafts</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-purple"><i class="fas fa-tags"></i></div><div><div class="stat-num">${cats.size}</div><div class="stat-lbl">Categories</div></div></div>`;
+  document.getElementById('dashPostsTable').innerHTML = postRows(all.slice(0,8));
+}
+
+/* ── POSTS TABLE ────────────────────────────────────────── */
+async function renderPostsTable() {
+  const st  = document.getElementById('fStatus')?.value||'';
+  const cat = document.getElementById('fCat')?.value||'';
+  const q   = (document.getElementById('fSearch')?.value||'').toLowerCase();
+  let posts = await DB.getPosts();
+  if (st)  posts = posts.filter(p=>p.status===st);
+  if (cat) posts = posts.filter(p=>p.category===cat);
+  if (q)   posts = posts.filter(p=>(p.title||'').toLowerCase().includes(q)||(p.excerpt||'').toLowerCase().includes(q));
+  document.getElementById('postsTableBody').innerHTML = postRows(posts);
+}
+
+function postRows(posts) {
+  if (!posts.length) return `<div class="empty-state"><i class="fas fa-file-alt"></i>No posts yet. <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="nav('editor')">Create first post</button></div>`;
+  return `<table><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Date</th><th style="width:100px;">Actions</th></tr></thead><tbody>
+    ${posts.map(p=>`<tr>
+      <td class="t-title">${esc(p.title||'Untitled')}<small>${esc(p.slug||'')}</small></td>
+      <td>${p.category?`<span class="badge b-cat">${esc(p.category)}</span>`:'—'}</td>
+      <td><span class="badge b-${p.status||'draft'}">${p.status||'draft'}</span></td>
+      <td style="white-space:nowrap;font-size:12px;color:var(--muted);">${fmtDate(p.publishedAt||p.createdAt)}</td>
+      <td><div class="action-btns">
+        <button class="btn-icon" onclick="nav('editor','${p.id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+        <a class="btn-icon" href="post.html?id=${p.id}" target="_blank" title="Preview"><i class="fas fa-eye"></i></a>
+        <button class="btn-icon del" onclick="confirmDel('${p.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+/* ── FAVES TABLE ────────────────────────────────────────── */
+async function renderFavesTable() {
+  const st = document.getElementById('fFaveStatus')?.value||'';
+  const q  = (document.getElementById('fFaveSearch')?.value||'').toLowerCase();
+  let faves = await FaveDB.getFaves();
+  if (st) faves = faves.filter(f=>f.status===st);
+  if (q)  faves = faves.filter(f=>(f.title||'').toLowerCase().includes(q)||(f.brand||'').toLowerCase().includes(q));
+  document.getElementById('favesTableBody').innerHTML = faveRows(faves);
+}
+
+function faveRows(faves) {
+  if (!faves.length) return `<div class="empty-state"><i class="fas fa-heart"></i>No faves yet. <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="nav('faveEditor')">Add your first fave</button></div>`;
+  return `<table><thead><tr><th>Product</th><th>Brand</th><th>Price</th><th>Status</th><th style="width:100px;">Actions</th></tr></thead><tbody>
+    ${faves.map(f=>`<tr>
+      <td class="t-title">${esc(f.title||'Untitled')}</td>
+      <td>${f.brand?esc(f.brand):'—'}</td>
+      <td>${f.price?esc(f.price):'—'}</td>
+      <td><span class="badge b-${f.status||'draft'}">${f.status||'draft'}</span></td>
+      <td><div class="action-btns">
+        <button class="btn-icon" onclick="nav('faveEditor','${f.id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+        <a class="btn-icon" href="${esc(f.affiliate_url||'#')}" target="_blank" title="Open Link"><i class="fas fa-up-right-from-square"></i></a>
+        <button class="btn-icon del" onclick="confirmDelFave('${f.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+/* ── FAVE EDITOR ────────────────────────────────────────── */
+async function initFaveEditor(faveId) {
+  document.getElementById('fvTitle').value  = '';
+  document.getElementById('fvBrand').value  = '';
+  document.getElementById('fvPrice').value  = '';
+  document.getElementById('fvUrl').value    = '';
+  document.getElementById('fvImgUrl').value = '';
+  document.getElementById('fvImgFile').value= '';
+  document.getElementById('fvCat').value    = '';
+  document.getElementById('fvSort').value   = 0;
+  document.getElementById('fvStatus').value = 'draft';
+  document.getElementById('fvImgPrev').className = 'feat-prev';
+  document.getElementById('btnFaveDelete').classList.add('hidden');
+  setFaveStatusUI('draft');
+
+  if (faveId) {
+    const f = await FaveDB.getFave(faveId);
+    if (f) {
+      document.getElementById('fvTitle').value  = f.title||'';
+      document.getElementById('fvBrand').value  = f.brand||'';
+      document.getElementById('fvPrice').value  = f.price||'';
+      document.getElementById('fvUrl').value    = f.affiliateUrl||'';
+      document.getElementById('fvImgUrl').value = f.image||'';
+      document.getElementById('fvCat').value    = f.category||'';
+      document.getElementById('fvSort').value   = f.sortOrder||0;
+      document.getElementById('fvStatus').value = f.status||'draft';
+      if (f.image) { const prev = document.getElementById('fvImgPrev'); prev.src = f.image; prev.className = 'feat-prev show'; }
+      setFaveStatusUI(f.status||'draft');
+      document.getElementById('btnFaveDelete').classList.remove('hidden');
+    }
+  }
+}
+
+function setFaveStatusUI(status) {
+  document.getElementById('fvDot').className    = `s-dot ${status}`;
+  document.getElementById('fvLabel').textContent = status==='published'?'Published':'Draft';
+}
+
+function collectFaveEditorData(status) {
+  return {
+    title:        document.getElementById('fvTitle').value.trim(),
+    brand:        document.getElementById('fvBrand').value.trim(),
+    price:        document.getElementById('fvPrice').value.trim(),
+    affiliateUrl: document.getElementById('fvUrl').value.trim(),
+    image:        document.getElementById('fvImgUrl').value.trim(),
+    category:     document.getElementById('fvCat').value,
+    sortOrder:    parseInt(document.getElementById('fvSort').value, 10) || 0,
+    status,
+  };
+}
+
+async function saveFave(status) {
+  const data = collectFaveEditorData(status);
+  if (!data.title) { toast('Add a product name before saving.','warning'); return; }
+  if (editingFaveId) {
+    await FaveDB.updateFave(editingFaveId, data);
+    toast(`Fave ${status==='published'?'published':'saved'}!`, 'success');
+  } else {
+    const f = await FaveDB.createFave(data);
+    if (f) editingFaveId = f.id;
+    toast(`Fave ${status==='published'?'published':'saved as draft'}!`, 'success');
+  }
+  document.getElementById('btnFaveDelete').classList.remove('hidden');
+  setFaveStatusUI(status);
+  document.getElementById('fvStatus').value = status;
+}
+
+function confirmDelFave(faveId) {
+  openModal('Delete this fave?','This will permanently remove it from Shop My Faves.', async ()=>{
+    await FaveDB.deleteFave(faveId);
+    toast('Fave deleted.','success');
+    if (curView==='faveEditor') await nav('faves');
+    else await renderFavesTable();
+  });
+}
+
+/* ── LEADS TABLE ────────────────────────────────────────── */
+async function renderLeadsTable() {
+  const leads = await LeadsDB.getLeads();
+  document.getElementById('leadsTableBody').innerHTML = leadRows(leads);
+}
+
+function leadRows(leads) {
+  if (!leads.length) return `<div class="empty-state"><i class="fas fa-envelope-open-text"></i>No signups yet.</div>`;
+  return `<table><thead><tr><th>Email</th><th>Name</th><th>Source</th><th>Date</th><th style="width:60px;">Actions</th></tr></thead><tbody>
+    ${leads.map(l=>`<tr>
+      <td class="t-title">${esc(l.email||'')}</td>
+      <td>${l.name?esc(l.name):'—'}</td>
+      <td>${l.source?esc(l.source):'—'}</td>
+      <td style="white-space:nowrap;font-size:12px;color:var(--muted);">${fmtDate(l.created_at)}</td>
+      <td><div class="action-btns">
+        <button class="btn-icon del" onclick="confirmDelLead('${l.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function confirmDelLead(leadId) {
+  openModal('Delete this signup?','This will permanently remove it from your leads list.', async ()=>{
+    await LeadsDB.deleteLead(leadId);
+    toast('Lead deleted.','success');
+    await renderLeadsTable();
+  });
+}
+
+function exportLeadsCSV(leads) {
+  const header = 'email,name,source,created_at\n';
+  const rows = leads.map(l => [l.email, l.name||'', l.source||'', l.created_at]
+    .map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `nanayaa-leads-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+/* ── EDITOR ─────────────────────────────────────────────── */
+async function initEditor(postId) {
+  // Reset fields
+  const now = new Date().toISOString().slice(0,16);
+  document.getElementById('eTitle').value    = '';
+  document.getElementById('eSlug').value     = '';
+  document.getElementById('eContent').innerHTML = '';
+  document.getElementById('eExcerpt').value  = '';
+  document.getElementById('eCat').value      = '';
+  document.getElementById('eTags').value     = '';
+  document.getElementById('eImgUrl').value   = '';
+  document.getElementById('eReadTime').value = '';
+  document.getElementById('eImgFile').value  = '';
+  document.getElementById('eDate').value     = now;
+  document.getElementById('eStatus').value   = 'draft';
+  document.getElementById('imgPrev').className = 'feat-prev';
+  document.getElementById('btnDelete').classList.add('hidden');
+  setStatusUI('draft');
+
+  if (postId) {
+    const p = await DB.getPost(postId);
+    if (p) {
+      document.getElementById('eTitle').value    = p.title||'';
+      document.getElementById('eSlug').value     = p.slug||'';
+      document.getElementById('eContent').innerHTML = p.content||'';
+      document.getElementById('eExcerpt').value  = p.excerpt||'';
+      document.getElementById('eCat').value      = p.category||'';
+      document.getElementById('eTags').value     = (p.tags||[]).join(', ');
+      document.getElementById('eImgUrl').value   = p.image||'';
+      document.getElementById('eReadTime').value = p.readTime||'';
+      document.getElementById('eStatus').value   = p.status||'draft';
+      const d = p.publishedAt||p.createdAt;
+      if (d) document.getElementById('eDate').value = d.slice(0,16);
+      if (p.image) { const prev = document.getElementById('imgPrev'); prev.src = p.image; prev.className = 'feat-prev show'; }
+      setStatusUI(p.status||'draft');
+      document.getElementById('btnDelete').classList.remove('hidden');
+    }
+  }
+}
+
+function setStatusUI(status) {
+  document.getElementById('sDot').className   = `s-dot ${status}`;
+  document.getElementById('sLabel').textContent = status==='published'?'Published':'Draft';
+}
+
+function collectEditorData(status) {
+  const title   = document.getElementById('eTitle').value.trim();
+  const slug    = document.getElementById('eSlug').value.trim()||slugify(title);
+  const content = document.getElementById('eContent').innerHTML;
+  const rawExc  = document.getElementById('eExcerpt').value.trim();
+  const excerpt = rawExc || stripHtml(content).slice(0,180).trim();
+  const category= document.getElementById('eCat').value;
+  const tags    = document.getElementById('eTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const image   = document.getElementById('eImgUrl').value.trim();
+  const readTime= document.getElementById('eReadTime').value.trim();
+  const dateVal = document.getElementById('eDate').value;
+  return { title, slug, content, excerpt, category, tags, image, readTime, status, publishedAt: dateVal?new Date(dateVal).toISOString():new Date().toISOString() };
+}
+
+async function savePost(status) {
+  const data = collectEditorData(status);
+  if (!data.title) { toast('Add a title before saving.','warning'); return; }
+  if (editingId) {
+    await DB.updatePost(editingId, data);
+    toast(`Post ${status==='published'?'published':'saved'}!`, 'success');
+  } else {
+    const p = await DB.createPost(data);
+    if (p) editingId = p.id;
+    toast(`Post ${status==='published'?'published':'saved as draft'}!`, 'success');
+  }
+  document.getElementById('btnDelete').classList.remove('hidden');
+  setStatusUI(status);
+  document.getElementById('eStatus').value = status;
+}
+
+/* ── IMPORT ─────────────────────────────────────────────── */
+function resetImport() {
+  importData = [];
+  document.getElementById('ipList').innerHTML = `<div class="empty-state"><i class="fas fa-file-import"></i>Upload a file to preview posts</div>`;
+  document.getElementById('ipCount').textContent = '';
+  document.getElementById('btnImport').classList.add('hidden');
+  document.getElementById('importFile').value = '';
+}
+
+function handleImportFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const txt  = e.target.result;
+    const name = file.name.toLowerCase();
+    let posts;
+    if (name.endsWith('.json'))                   posts = parseJSON(txt);
+    else if (name.endsWith('.xml')||name.endsWith('.wxr')) posts = parseWPXML(txt);
+    else { posts = parseJSON(txt); if (!posts) posts = parseWPXML(txt); }
+    if (!posts||!posts.length) { toast('No posts found in this file.','warning'); return; }
+    showImportPreview(posts);
+    toast(`${posts.length} post${posts.length!==1?'s':''} detected — review and import.`,'success');
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseWPXML(xml) {
+  const doc   = new DOMParser().parseFromString(xml,'text/xml');
+  const items = [...doc.querySelectorAll('item')];
+
+  // Build a map of attachment post_id -> image URL (WordPress stores featured
+  // images as separate attachment items, linked via a _thumbnail_id postmeta
+  // on the post rather than an inline <img> in the content).
+  const attachmentUrls = {};
+  items.forEach(item => {
+    const typeEl = item.querySelector('[*|post_type],post_type');
+    if ((typeEl?.textContent||'').trim() !== 'attachment') return;
+    const idEl  = item.querySelector('[*|post_id],post_id');
+    const urlEl = item.querySelector('[*|attachment_url],attachment_url');
+    const url   = urlEl?.textContent || item.querySelector('link')?.textContent || '';
+    if (idEl && url) attachmentUrls[idEl.textContent.trim()] = url.trim();
+  });
+
+  const posts = [];
+  items.forEach(item => {
+    const typeEl = item.querySelector('[*|post_type],post_type');
+    if ((typeEl?.textContent||'').trim() !== 'post') return;
+    const statEl = item.querySelector('[*|status],status');
+    const status = (statEl?.textContent||'').trim()==='publish'?'published':'draft';
+    const content= item.getElementsByTagNameNS('http://purl.org/rss/1.0/modules/content/','encoded')[0]?.textContent
+                 || item.querySelector('encoded')?.textContent || '';
+    const excerpt= item.getElementsByTagNameNS('http://wordpress.org/export/1.2/excerpt/','encoded')[0]?.textContent || '';
+    const catEl  = item.querySelector('category[domain="category"]');
+    const pubEl  = item.querySelector('[*|post_date],post_date,pubDate');
+    let dateStr  = pubEl?.textContent||'';
+    let dateISO;
+    try { dateISO = new Date(dateStr).toISOString(); } catch { dateISO = new Date().toISOString(); }
+    const title  = (item.querySelector('title')?.textContent||'Untitled').replace(/<!\[CDATA\[|\]\]>/g,'').trim();
+    const link   = item.querySelector('link')?.textContent||'';
+    const slug   = link.split('/').filter(Boolean).pop()||slugify(title);
+
+    // Prefer the featured-image attachment; fall back to the first inline <img>.
+    let thumbId = '';
+    item.querySelectorAll('postmeta,[*|postmeta]').forEach(pm => {
+      const key = pm.querySelector('[*|meta_key],meta_key')?.textContent?.trim();
+      if (key === '_thumbnail_id') thumbId = pm.querySelector('[*|meta_value],meta_value')?.textContent?.trim() || '';
+    });
+    const image = (thumbId && attachmentUrls[thumbId]) || extractFirstImg(content);
+
+    posts.push({ title, slug, content, excerpt:excerpt||stripHtml(content).slice(0,180), category:mapCat(catEl?.textContent||''), tags:[], image, readTime:'', status, publishedAt:dateISO });
+  });
+  return posts;
+}
+
+function parseJSON(txt) {
+  try {
+    const raw  = JSON.parse(txt);
+    const arr  = Array.isArray(raw) ? raw : (raw.posts||raw.data||[]);
+    if (!Array.isArray(arr)) return null;
+    return arr.map(p => ({
+      title:    p.title||p.name||'Untitled',
+      slug:     p.slug||slugify(p.title||''),
+      content:  p.content||p.body||p.html||'',
+      excerpt:  p.excerpt||p.description||p.summary||'',
+      category: mapCat(Array.isArray(p.categories)?p.categories[0]:p.category||''),
+      tags:     Array.isArray(p.tags)?p.tags:[],
+      image:    p.image||p.featured_image||p.jetpack_featured_media_url||p._embedded?.['wp:featuredmedia']?.[0]?.source_url||'',
+      readTime: p.readTime||p.read_time||'',
+      status:   (p.status==='publish'||p.status==='published')?'published':'draft',
+      publishedAt: p.date||p.date_gmt||p.publishedAt||p.created_at||new Date().toISOString(),
+    }));
+  } catch { return null; }
+}
+
+function mapCat(c) {
+  if (!c) return '';
+  const l = c.toLowerCase();
+  if (l.includes('faith')||l.includes('christian')||l.includes('devotional')) return 'Faith';
+  if (l.includes('lifestyle')||l.includes('life')) return 'Lifestyle';
+  if (l.includes('fashion')||l.includes('style')||l.includes('outfit')) return 'Fashion';
+  if (l.includes('beauty')||l.includes('skin')||l.includes('makeup')) return 'Beauty';
+  if (l.includes('creator')||l.includes('blogging')||l.includes('social')) return 'Creator Life';
+  return c;
+}
+
+function extractFirstImg(html) {
+  const m = html.match(/<img[^>]+src=['"]([^'"]+)['"]/i);
+  return m?m[1]:'';
+}
+
+function showImportPreview(posts) {
+  importData = posts;
+  document.getElementById('ipCount').textContent = `${posts.length} post${posts.length!==1?'s':''} found`;
+  document.getElementById('btnImport').classList.toggle('hidden', posts.length===0);
+  document.getElementById('ipList').innerHTML = posts.map((p,i)=>`
+    <div class="ip-item">
+      <input type="checkbox" class="ip-cb" data-i="${i}" checked />
+      <div style="min-width:0;">
+        <div class="ip-ttl">${esc(p.title)}</div>
+        <div class="ip-meta">
+          ${p.category?`<span class="badge b-cat">${esc(p.category)}</span>`:''}
+          <span class="badge b-${p.status}">${p.status}</span>
+          ${p.publishedAt?`· ${fmtDate(p.publishedAt)}`:''}
+          ${p.content?`· ~${Math.ceil(wordCount(p.content)/200)} min read`:''}
+          ${p.image?`<i class="fas fa-image" title="Has featured image" style="color:var(--gold);"></i>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function doImport() {
+  const indices = [...document.querySelectorAll('.ip-cb:checked')].map(cb=>+cb.dataset.i);
+  const toImport = indices.map(i=>importData[i]);
+  if (!toImport.length) { toast('Select at least one post to import.','warning'); return; }
+
+  const btn = document.getElementById('btnImport');
+  btn.disabled = true;
+  btn.textContent = 'Importing…';
+
+  const { inserted, error } = await DB.createPosts(toImport);
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-file-import"></i> Import Selected';
+
+  if (error) {
+    toast(`Import failed: ${error.message}`, 'error');
+    return; // leave the preview + selection in place so nothing is lost
+  }
+  if (inserted.length < toImport.length) {
+    toast(`Only ${inserted.length} of ${toImport.length} posts imported — check the console for details.`, 'warning');
+  } else {
+    toast(`${inserted.length} post${inserted.length!==1?'s':''} imported!`,'success');
+  }
+  resetImport();
+  setTimeout(()=>nav('posts'),1000);
+}
+
+/* ── CONFIRM MODAL ──────────────────────────────────────── */
+function confirmDel(postId) {
+  openModal('Delete this post?','This will permanently delete the post and cannot be undone.',async ()=>{
+    await DB.deletePost(postId);
+    toast('Post deleted.','success');
+    if (curView==='editor') await nav('posts');
+    else { await renderDashboard(); await renderPostsTable(); }
+  });
+}
+
+function openModal(title, body, cb) {
+  document.getElementById('mTitle').textContent = title;
+  document.getElementById('mBody').textContent  = body;
+  document.getElementById('confirmModal').classList.remove('hidden');
+  confirmCb = cb;
+}
+
+/* ── TOAST ──────────────────────────────────────────────── */
+function toast(msg, type='success') {
+  const icons = {success:'fa-check-circle',error:'fa-times-circle',warning:'fa-exclamation-triangle'};
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<i class="fas ${icons[type]||icons.success}"></i>${esc(msg)}`;
+  document.getElementById('toastWrap').appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),350); }, 3500);
+}
+
+/* ── EXPORT ─────────────────────────────────────────────── */
+async function exportPosts() {
+  const data = JSON.stringify(await DB.getPosts(), null, 2);
+  const blob = new Blob([data],{type:'application/json'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `nanayaa-posts-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('Posts exported!','success');
+}
+
+/* ── INIT ───────────────────────────────────────────────── */
+async function enterApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  const email = await Auth.currentEmail();
+  if (email) {
+    document.getElementById('sbUserName').textContent = email;
+    document.getElementById('avatarInitial').textContent = email[0].toUpperCase();
+  }
+  nav('dashboard');
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+  // Auth check (Supabase persists the session in the browser automatically)
+  if (await Auth.isLoggedIn()) {
+    await enterApp();
+  }
+
+  // Login form
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = document.getElementById('loginUser').value.trim();
+    const pass  = document.getElementById('loginPass').value;
+    const btn   = e.target.querySelector('.login-btn');
+    btn.disabled = true;
+    const errMsg = await Auth.login(email, pass);
+    btn.disabled = false;
+    if (!errMsg) {
+      await enterApp();
+    } else {
+      const err = document.getElementById('loginError');
+      err.textContent = errMsg;
+      setTimeout(()=>err.textContent='',4000);
+    }
+  });
+
+  // Sidebar + topbar nav
+  document.querySelectorAll('[data-nav]').forEach(el=>{
+    el.addEventListener('click',()=>nav(el.dataset.nav));
+  });
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+    await Auth.logout();
+    document.getElementById('appScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+  });
+
+  // Editor: status change
+  document.getElementById('eStatus').addEventListener('change',e=>setStatusUI(e.target.value));
+
+  // Editor: publish/draft buttons
+  document.getElementById('btnPublish').addEventListener('click',()=>savePost('published'));
+  document.getElementById('btnDraft').addEventListener('click',()=>savePost('draft'));
+
+  // Editor: delete
+  document.getElementById('btnDelete').addEventListener('click',()=>{ if(editingId) confirmDel(editingId); });
+
+  // Editor: slug
+  document.getElementById('btnGenSlug').addEventListener('click',()=>{
+    document.getElementById('eSlug').value = slugify(document.getElementById('eTitle').value);
+  });
+  document.getElementById('eTitle').addEventListener('input',e=>{
+    if (!editingId) document.getElementById('eSlug').value = slugify(e.target.value);
+  });
+
+  // Editor: featured image URL
+  document.getElementById('eImgUrl').addEventListener('input',e=>{
+    const prev = document.getElementById('imgPrev');
+    if (e.target.value) { prev.src=e.target.value; prev.className='feat-prev show'; }
+    else prev.className='feat-prev';
+  });
+
+  // Editor: featured image file
+  document.getElementById('eImgFile').addEventListener('change',e=>{
+    const file = e.target.files[0]; if(!file) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      document.getElementById('eImgUrl').value = ev.target.result;
+      const prev = document.getElementById('imgPrev');
+      prev.src = ev.target.result;
+      prev.className = 'feat-prev show';
+    };
+    r.readAsDataURL(file);
+  });
+
+  // Editor: auto-calc read time
+  document.getElementById('btnCalcRead').addEventListener('click',()=>{
+    const wc = wordCount(document.getElementById('eContent').innerHTML);
+    const mins = Math.max(1,Math.ceil(wc/200));
+    document.getElementById('eReadTime').value = `${mins} min read`;
+  });
+
+  // Fave editor: status change
+  document.getElementById('fvStatus').addEventListener('change',e=>setFaveStatusUI(e.target.value));
+
+  // Fave editor: publish/draft buttons
+  document.getElementById('btnFavePublish').addEventListener('click',()=>saveFave('published'));
+  document.getElementById('btnFaveDraft').addEventListener('click',()=>saveFave('draft'));
+
+  // Fave editor: delete
+  document.getElementById('btnFaveDelete').addEventListener('click',()=>{ if(editingFaveId) confirmDelFave(editingFaveId); });
+
+  // Fave editor: image URL preview
+  document.getElementById('fvImgUrl').addEventListener('input',e=>{
+    const prev = document.getElementById('fvImgPrev');
+    if (e.target.value) { prev.src=e.target.value; prev.className='feat-prev show'; }
+    else prev.className='feat-prev';
+  });
+
+  // Fave editor: image file upload
+  document.getElementById('fvImgFile').addEventListener('change',e=>{
+    const file = e.target.files[0]; if(!file) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      document.getElementById('fvImgUrl').value = ev.target.result;
+      const prev = document.getElementById('fvImgPrev');
+      prev.src = ev.target.result;
+      prev.className = 'feat-prev show';
+    };
+    r.readAsDataURL(file);
+  });
+
+  // Faves table: filters
+  ['fFaveStatus','fFaveSearch'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input',renderFavesTable);
+  });
+
+  // Leads: export CSV
+  document.getElementById('btnExportLeads').addEventListener('click', async ()=>{
+    const leads = await LeadsDB.getLeads();
+    if (!leads.length) { toast('No leads to export yet.','warning'); return; }
+    exportLeadsCSV(leads);
+    toast('Leads exported!','success');
+  });
+
+  // Toolbar: execCommand buttons
+  document.querySelectorAll('.tb[data-cmd]').forEach(btn=>{
+    btn.addEventListener('mousedown',e=>{
+      e.preventDefault();
+      document.execCommand(btn.dataset.cmd,false,null);
+      document.getElementById('eContent').focus();
+    });
+  });
+
+  // Toolbar: format block
+  document.getElementById('tbFormat').addEventListener('change',e=>{
+    const val = e.target.value;
+    if (val) { document.execCommand('formatBlock',false,val); document.getElementById('eContent').focus(); }
+    e.target.value='';
+  });
+
+  // Toolbar: link
+  document.getElementById('tbLink').addEventListener('mousedown',e=>{
+    e.preventDefault();
+    const sel = window.getSelection().toString();
+    const url = prompt('URL:',sel.startsWith('http')?sel:'https://');
+    if (url) { document.execCommand('createLink',false,url); }
+  });
+
+  // Toolbar: insert image
+  document.getElementById('tbImg').addEventListener('mousedown',e=>{
+    e.preventDefault();
+    const url = prompt('Image URL:','https://');
+    if (url) { document.execCommand('insertImage',false,url); }
+  });
+
+  // Toolbar: HR
+  document.getElementById('tbHR').addEventListener('mousedown',e=>{
+    e.preventDefault();
+    document.execCommand('insertHTML',false,'<hr/>');
+  });
+
+  // Toolbar: HTML source toggle
+  let srcOpen = false;
+  document.getElementById('tbHtml').addEventListener('click',()=>{
+    srcOpen = !srcOpen;
+    const wrap = document.getElementById('htmlSourceWrap');
+    const body = document.getElementById('eContent');
+    if (srcOpen) {
+      document.getElementById('htmlSource').value = body.innerHTML;
+      wrap.classList.remove('hidden');
+      document.getElementById('tbHtml').classList.add('on');
+    } else {
+      body.innerHTML = document.getElementById('htmlSource').value;
+      wrap.classList.add('hidden');
+      document.getElementById('tbHtml').classList.remove('on');
+    }
+  });
+  document.getElementById('htmlSource').addEventListener('input',e=>{
+    document.getElementById('eContent').innerHTML = e.target.value;
+  });
+
+  // Filters
+  ['fStatus','fCat','fSearch'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input',renderPostsTable);
+  });
+
+  // Import file input
+  document.getElementById('importFile').addEventListener('change',e=>handleImportFile(e.target.files[0]));
+
+  // Drop zone
+  const dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');handleImportFile(e.dataTransfer.files[0]);});
+  dz.addEventListener('click',()=>document.getElementById('importFile').click());
+
+  // Import button
+  document.getElementById('btnImport').addEventListener('click',doImport);
+
+  // Settings: change password
+  document.getElementById('btnChangePass').addEventListener('click', async ()=>{
+    const nw   = document.getElementById('sNewPass').value;
+    const conf = document.getElementById('sConfPass').value;
+    if (nw.length < 6) { toast('New password must be at least 6 characters.','warning'); return; }
+    if (nw !== conf) { toast('Passwords do not match.','error'); return; }
+    const { error } = await supabaseClient.auth.updateUser({ password: nw });
+    if (error) { toast('Could not update password: ' + error.message, 'error'); return; }
+    document.getElementById('sNewPass').value  = '';
+    document.getElementById('sConfPass').value = '';
+    toast('Password updated!','success');
+  });
+
+  // Settings: export
+  document.getElementById('btnExport').addEventListener('click',exportPosts);
+
+  // Settings: delete all
+  document.getElementById('btnNuke').addEventListener('click',()=>{
+    openModal('Delete all posts?','This will permanently delete every post in the database for all visitors. This cannot be undone.', async ()=>{
+      await DB.deleteAll();
+      document.getElementById('confirmModal').classList.add('hidden');
+      toast('All posts deleted.','success');
+      nav('dashboard');
+    });
+  });
+
+  // Modal buttons
+  document.getElementById('mCancel').addEventListener('click',()=>{ document.getElementById('confirmModal').classList.add('hidden'); confirmCb=null; });
+  document.getElementById('mConfirm').addEventListener('click',()=>{ if(confirmCb) confirmCb(); document.getElementById('confirmModal').classList.add('hidden'); confirmCb=null; });
+
+  // Ctrl+S to save
+  document.addEventListener('keydown',e=>{
+    if (!((e.ctrlKey||e.metaKey) && e.key==='s')) return;
+    if (curView==='editor') {
+      e.preventDefault();
+      savePost(document.getElementById('eStatus').value);
+    } else if (curView==='faveEditor') {
+      e.preventDefault();
+      saveFave(document.getElementById('fvStatus').value);
+    }
+  });
+
+});
+</script>
+</body>
+</html>

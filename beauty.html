@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beauty | Nana Yaa Ansah</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header scrolled" id="header">
+    <nav class="nav">
+      <div class="nav-left">
+        <a href="lifestyle.html" class="nav-link">Lifestyle</a>
+        <a href="fashion.html" class="nav-link">Fashion</a>
+        <a href="faith.html" class="nav-link">Faith</a>
+      </div>
+      <div class="nav-logo">
+        <a href="index.html">Nana Yaa Ansah</a>
+      </div>
+      <div class="nav-right">
+        <a href="beauty.html" class="nav-link active">Beauty</a>
+        <a href="faves.html" class="nav-link">Faves</a>
+        <button class="nav-search" aria-label="Search"><i class="fas fa-search"></i></button>
+      </div>
+      <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="lifestyle.html">Lifestyle</a>
+      <a href="fashion.html">Fashion</a>
+      <a href="faith.html">Faith</a>
+      <a href="beauty.html">Beauty</a>
+      <a href="faves.html">Faves</a>
+      <a href="about.html">About</a>
+      <a href="work-with-me.html">Work With Me</a>
+      <a href="press.html">Press</a>
+      <a href="resources.html">Resources</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </header>
+
+  <main class="category-page">
+    <section class="category-hero beauty-theme">
+      <div class="container category-hero-grid">
+        <div class="category-copy reveal">
+          <span class="section-tag">Beauty</span>
+          <h1>Everyday Glow for <em>City Summers</em></h1>
+          <p>Tested skincare, humidity-proof makeup, and salon recommendations for keeping it polished in NYC heat.</p>
+          <a href="#stories" class="btn btn-gold">Open Beauty Posts</a>
+        </div>
+        <div class="category-hero-image reveal">
+          <img src="https://picsum.photos/seed/beauty-hero/1000/1200" alt="Beauty in NYC" />
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="stories">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <span class="section-tag">Beauty Shelf</span>
+            <h2 class="section-title">Beauty Essentials</h2>
+          </div>
+        </div>
+        <div class="posts-grid page-posts-grid"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3 class="footer-logo">Nana Yaa Ansah</h3>
+          <p>Life, Style &amp; The City — your curated guide to living boldly in New York.</p>
+          <div class="footer-socials">
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+            <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            <a href="#" aria-label="Pinterest"><i class="fab fa-pinterest"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="lifestyle.html">Lifestyle</a></li>
+            <li><a href="fashion.html">Fashion</a></li>
+            <li><a href="faith.html">Faith</a></li>
+            <li><a href="beauty.html">Beauty</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Connect</h4>
+          <ul>
+            <li><a href="about.html">About Nana Yaa</a></li>
+            <li><a href="faves.html">Shop My Faves</a></li>
+            <li><a href="work-with-me.html">Work With Me</a></li>
+            <li><a href="press.html">Press</a></li>
+            <li><a href="resources.html">Resources</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Use</a></li>
+            <li><a href="#">Disclosure</a></li>
+            <li><a href="#">Cookie Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Nana Yaa Ansah. All rights reserved. Made with love in New York City.</p>
+      </div>
+    </div>
+  </footer>
+
+  <button class="scroll-top-btn" id="scrollTopBtn" aria-label="Back to top">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase-client.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

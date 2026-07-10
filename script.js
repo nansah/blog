@@ -1,0 +1,290 @@
+/* ============================================
+   THE NYC EDIT — Interactive JS
+   ============================================ */
+
+const header      = document.getElementById('header');
+const mobileToggle = document.getElementById('mobileToggle');
+const mobileMenu  = document.getElementById('mobileMenu');
+const scrollTopBtn = document.getElementById('scrollTopBtn');
+const nlForm      = document.getElementById('newsletterForm');
+const navSearchButtons = document.querySelectorAll('.nav-search');
+
+// ── Sticky nav + scroll-to-top visibility ──────────────────────────────────
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY > 60;
+  if (header) header.classList.toggle('scrolled', scrolled);
+  if (scrollTopBtn) scrollTopBtn.classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
+
+// ── Mobile menu ────────────────────────────────────────────────────────────
+if (mobileToggle && mobileMenu) {
+  mobileToggle.addEventListener('click', () => {
+    const open = mobileMenu.classList.toggle('open');
+    mobileToggle.classList.toggle('open', open);
+    mobileToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  });
+
+  // Close mobile menu when a link is tapped
+  mobileMenu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      mobileToggle.classList.remove('open');
+    });
+  });
+}
+
+// ── Scroll to top ──────────────────────────────────────────────────────────
+if (scrollTopBtn) {
+  scrollTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// ── Newsletter form ────────────────────────────────────────────────────────
+if (nlForm) {
+  nlForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const btn   = nlForm.querySelector('button');
+    const input = nlForm.querySelector('input');
+
+    const original = btn.textContent;
+    btn.textContent = 'You\'re in! ✓';
+    btn.style.background = '#4ade80';
+    btn.style.borderColor = '#4ade80';
+    input.value = '';
+
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.style.background = '';
+      btn.style.borderColor = '';
+    }, 3500);
+  });
+}
+
+// ── Intersection Observer — reveal on scroll ───────────────────────────────
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ── Stagger post cards ─────────────────────────────────────────────────────
+const cardObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const cards = entry.target.querySelectorAll('.post-card.reveal');
+      cards.forEach((card, i) => {
+        setTimeout(() => card.classList.add('in-view'), i * 110);
+      });
+      cardObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.05 });
+
+const postsGrid = document.querySelector('.posts-grid');
+if (postsGrid) cardObserver.observe(postsGrid);
+
+// ── Stagger Instagram grid ─────────────────────────────────────────────────
+const igObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.ig-item.reveal').forEach((item, i) => {
+        setTimeout(() => item.classList.add('in-view'), i * 80);
+      });
+      igObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.05 });
+
+const igGrid = document.querySelector('.ig-grid');
+if (igGrid) igObserver.observe(igGrid);
+
+// ── Lightweight site search overlay ───────────────────────────────────────
+const searchIndex = [
+  { title: 'Home', group: 'Main', href: 'index.html' },
+  { title: 'Lifestyle', group: 'Category', href: 'lifestyle.html' },
+  { title: 'Fashion', group: 'Category', href: 'fashion.html' },
+  { title: 'Faith', group: 'Category', href: 'faith.html' },
+  { title: 'Beauty', group: 'Category', href: 'beauty.html' },
+  { title: 'Latest Posts', group: 'Section', href: 'index.html#blog' },
+  { title: 'All Posts', group: 'Section', href: 'blog.html' },
+  { title: 'About Nana Yaa', group: 'Section', href: 'about.html' },
+  { title: 'Shop My Faves', group: 'Connect', href: 'faves.html' },
+  { title: 'Work With Me', group: 'Connect', href: 'work-with-me.html' },
+  { title: 'Press & Media', group: 'Connect', href: 'press.html' },
+  { title: 'Resources', group: 'Connect', href: 'resources.html' },
+  { title: 'Contact', group: 'Connect', href: 'contact.html' },
+];
+
+let searchOverlay;
+let searchInput;
+let searchResults;
+
+function renderSearchResults(query = '') {
+  if (!searchResults) return;
+
+  const term = query.trim().toLowerCase();
+  const matches = searchIndex.filter(item => (
+    item.title.toLowerCase().includes(term) || item.group.toLowerCase().includes(term)
+  ));
+
+  if (!matches.length) {
+    searchResults.innerHTML = '<div class="search-empty">No matches yet. Try lifestyle, fashion, faith, or beauty.</div>';
+    return;
+  }
+
+  searchResults.innerHTML = matches.map(item => (
+    `<a class="search-result-item" href="${item.href}">
+      <div>
+        <strong>${item.title}</strong>
+        <span>${item.group}</span>
+      </div>
+      <i class="fas fa-arrow-right"></i>
+    </a>`
+  )).join('');
+}
+
+function openSearchOverlay() {
+  if (!searchOverlay) return;
+  searchOverlay.classList.add('open');
+  document.body.classList.add('search-open');
+  renderSearchResults('');
+  if (searchInput) searchInput.focus();
+}
+
+function closeSearchOverlay() {
+  if (!searchOverlay) return;
+  searchOverlay.classList.remove('open');
+  document.body.classList.remove('search-open');
+}
+
+function ensureSearchOverlay() {
+  searchOverlay = document.getElementById('siteSearchOverlay');
+  if (!searchOverlay) {
+    const wrapper = document.createElement('div');
+    wrapper.id = 'siteSearchOverlay';
+    wrapper.className = 'search-overlay';
+    wrapper.setAttribute('aria-hidden', 'true');
+    wrapper.innerHTML = `
+      <div class="search-panel" role="dialog" aria-modal="true" aria-label="Site search">
+        <div class="search-panel-top">
+          <i class="fas fa-search" aria-hidden="true"></i>
+          <input class="search-input" type="text" placeholder="Search pages and sections..." aria-label="Search" />
+          <button class="search-close" type="button" aria-label="Close search"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="search-results"></div>
+      </div>
+    `;
+    document.body.appendChild(wrapper);
+    searchOverlay = wrapper;
+  }
+
+  searchInput = searchOverlay.querySelector('.search-input');
+  searchResults = searchOverlay.querySelector('.search-results');
+  const closeBtn = searchOverlay.querySelector('.search-close');
+  const panel = searchOverlay.querySelector('.search-panel');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      renderSearchResults(e.target.value);
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeSearchOverlay);
+  }
+
+  if (searchOverlay) {
+    searchOverlay.addEventListener('click', (e) => {
+      if (e.target === searchOverlay) closeSearchOverlay();
+    });
+  }
+
+  if (panel) {
+    panel.addEventListener('click', (e) => e.stopPropagation());
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && searchOverlay.classList.contains('open')) {
+      closeSearchOverlay();
+    }
+  });
+}
+
+if (navSearchButtons.length) {
+  ensureSearchOverlay();
+  navSearchButtons.forEach(btn => {
+    btn.addEventListener('click', openSearchOverlay);
+  });
+}
+
+// ── Smooth anchor scrolling (respects fixed header height) ────────────────
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', (e) => {
+    const target = document.querySelector(anchor.getAttribute('href'));
+    if (!target) return;
+    e.preventDefault();
+    const offset = (header ? header.offsetHeight : 0) + 16;
+    window.scrollTo({ top: target.offsetTop - offset, behavior: 'smooth' });
+  });
+});
+
+// ── Inject published posts from Supabase into category pages ──────────────
+(async function renderRemotePosts() {
+  const grid = document.querySelector('.posts-grid');
+  if (!grid || typeof supabaseClient === 'undefined') return;
+
+  // Detect which category page we're on
+  const path = window.location.pathname.toLowerCase();
+  const isHome = path === '/' || path === '' || path.endsWith('/index.html');
+  const pageCat = path.includes('lifestyle') ? 'Lifestyle'
+    : path.includes('fashion')  ? 'Fashion'
+    : path.includes('faith')    ? 'Faith'
+    : path.includes('beauty')   ? 'Beauty'
+    : null;
+
+  let query = supabaseClient.from('posts').select('*').eq('status', 'published').order('published_at', { ascending: false });
+  if (pageCat) query = query.eq('category', pageCat);
+  if (isHome) query = query.limit(6);
+
+  const { data: relevant, error } = await query;
+  if (error || !relevant || !relevant.length) return;
+
+  const fmtDate = iso => {
+    try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+    catch { return ''; }
+  };
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  relevant.forEach(post => {
+    const card = document.createElement('article');
+    card.className = 'post-card reveal admin-post';
+    card.innerHTML = `
+      <a href="post.html?id=${esc(post.id)}" class="post-card-link" style="display:block;text-decoration:none;color:inherit;">
+        <div class="post-img-wrap">
+          ${post.image
+            ? `<img src="${esc(post.image)}" alt="${esc(post.title)}" loading="lazy" />`
+            : `<div style="width:100%;padding-top:68%;background:linear-gradient(135deg,#2b241c,#1c1712);position:relative;"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:22px;color:#a9603f;opacity:.5;">✦</span></div>`
+          }
+        </div>
+        <div class="post-body">
+          ${post.category ? `<span class="section-tag" style="font-size:9px;margin-bottom:6px;display:inline-block;">${esc(post.category)}</span>` : ''}
+          <h3 class="post-title">${esc(post.title)}</h3>
+          ${post.excerpt ? `<p class="post-excerpt">${esc(post.excerpt)}</p>` : ''}
+          <div style="margin-top:10px;font-size:11px;color:#7a6f63;display:flex;gap:12px;flex-wrap:wrap;">
+            ${post.published_at ? `<span>${fmtDate(post.published_at)}</span>` : ''}
+            ${post.read_time    ? `<span>${esc(post.read_time)}</span>`       : ''}
+          </div>
+        </div>
+      </a>
+    `;
+    grid.appendChild(card);
+    // Observe the new card for reveal animation
+    revealObserver.observe(card);
+  });
+})();
