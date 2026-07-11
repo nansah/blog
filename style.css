@@ -149,7 +149,7 @@ button { font-family: inherit; }
   padding-top: 0;
 }
 
-.page-gallery-item { position: relative; display: block; }
+.page-gallery-item { position: relative; display: block; border-radius: var(--r-sm); overflow: hidden; }
 .page-gallery-item img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: var(--r-sm); }
 .page-gallery-video-badge {
   position: absolute; top: 10px; right: 10px;
@@ -158,6 +158,14 @@ button { font-family: inherit; }
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; pointer-events: none;
 }
+.page-gallery-caption {
+  position: absolute; inset: auto 0 0 0;
+  padding: 18px 14px 12px;
+  background: linear-gradient(to top, rgba(28,23,18,0.8), transparent);
+  color: var(--white); font-size: 12px; font-family: var(--font-sans);
+  opacity: 0; transition: var(--transition); pointer-events: none;
+}
+.page-gallery-item:hover .page-gallery-caption { opacity: 1; }
 
 /* Theme variants now share the same warm cream hero — kept as hooks in case a
    page wants a subtle per-category tint. */
