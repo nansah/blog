@@ -308,7 +308,9 @@
       <button class="sb-link" data-nav="social"><i class="fas fa-share-nodes"></i> Social Links</button>
       <button class="sb-link" data-nav="instagram"><i class="fab fa-instagram"></i> Instagram Feed</button>
       <button class="sb-link" data-nav="instagramEditor"><i class="fas fa-plus-circle"></i> New Photo</button>
-      <button class="sb-link" data-nav="brands"><i class="fas fa-handshake"></i> Past Collaborations</button>
+      <button class="sb-link" data-nav="brands"><i class="fas fa-handshake"></i> Brand Partners</button>
+      <button class="sb-link" data-nav="portfolio"><i class="fas fa-images"></i> Past Collaborations</button>
+      <button class="sb-link" data-nav="portfolioEditor"><i class="fas fa-plus-circle"></i> New Collaboration</button>
       <a href="/" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
     </nav>
     <div class="sb-bottom">
@@ -689,11 +691,11 @@
       </div>
     </div>
 
-    <!-- ── PAST COLLABORATIONS ── -->
+    <!-- ── BRAND PARTNERS ── -->
     <div id="panelBrands" class="panel hidden">
       <div class="table-wrap">
         <div class="table-head">
-          <span class="table-title">Past Collaborations</span>
+          <span class="table-title">Brand Partners</span>
         </div>
         <div style="display:flex; gap:10px; padding:16px 20px; border-bottom:1px solid var(--border);">
           <input type="text" class="s-in" id="newBrandName" placeholder="Add a brand name…" style="flex:1;" />
@@ -766,6 +768,76 @@
             <div class="meta-body">
               <input class="meta-in" id="igSort" type="number" value="0" placeholder="0" />
               <span style="font-size:11px;color:var(--muted);">Lower numbers show first. Homepage shows the first 8 published photos.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAST COLLABORATIONS LIST ── -->
+    <div id="panelPortfolio" class="panel hidden">
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title">Past Collaborations</span>
+          <div class="table-filters">
+            <select class="f-select" id="fPortfolioStatus"><option value="">All Statuses</option><option value="published">Published</option><option value="draft">Draft</option></select>
+          </div>
+        </div>
+        <div id="portfolioTableBody"></div>
+      </div>
+    </div>
+
+    <!-- ── PAST COLLABORATION EDITOR ── -->
+    <div id="panelPortfolioEditor" class="panel hidden">
+      <div class="editor-wrap">
+
+        <div class="editor-left">
+          <div class="e-card e-card-pad" style="display:flex; flex-direction:column; gap:16px;">
+            <div class="meta-field">
+              <span class="meta-lbl">Photo URL (JPG/PNG)</span>
+              <input class="meta-in" id="pfImgUrl" placeholder="https://…" />
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Or upload</span>
+              <input type="file" id="pfImgFile" accept="image/*" class="file-input" />
+            </div>
+            <img id="pfImgPrev" class="feat-prev" src="" alt="" />
+            <div class="meta-field">
+              <span class="meta-lbl">Video URL (optional)</span>
+              <input class="meta-in" id="pfVideoUrl" placeholder="https://…" />
+              <span style="font-size:11px;color:var(--muted);">If set, the photo links out to this video (Reel, YouTube, etc).</span>
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Caption / alt text (optional)</span>
+              <input class="meta-in" id="pfCaption" placeholder="e.g. Giorgio Armani campaign shoot" />
+            </div>
+          </div>
+        </div>
+
+        <div class="meta-sb">
+          <div class="meta-card">
+            <div class="meta-head">Publish</div>
+            <div class="meta-body">
+              <div class="status-ind"><div class="s-dot draft" id="pfDot"></div><span id="pfLabel">Draft</span></div>
+              <div class="meta-field">
+                <span class="meta-lbl">Status</span>
+                <select class="meta-sel" id="pfStatus"><option value="draft">Draft</option><option value="published">Published</option></select>
+              </div>
+              <div class="pub-btns">
+                <button class="pb primary" id="btnPfPublish">Publish</button>
+                <button class="pb draft" id="btnPfDraft">Save Draft</button>
+              </div>
+              <button class="btn btn-danger btn-sm hidden" id="btnPfDelete" style="width:100%;justify-content:center;margin-top:4px;">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+
+          <div class="meta-card">
+            <div class="meta-head">Sort Order</div>
+            <div class="meta-body">
+              <input class="meta-in" id="pfSort" type="number" value="0" placeholder="0" />
+              <span style="font-size:11px;color:var(--muted);">Lower numbers show first.</span>
             </div>
           </div>
         </div>
@@ -1014,6 +1086,47 @@ const InstagramDB = {
   },
 };
 
+/* ── PAST COLLABORATIONS (portfolio gallery, Work With Me page) ── */
+function normalizePortfolioItem(row) {
+  if (!row) return null;
+  return { ...row, videoUrl: row.video_url, sortOrder: row.sort_order, createdAt: row.created_at, updatedAt: row.updated_at };
+}
+function denormalizePortfolioItem(data) {
+  const { videoUrl, sortOrder, createdAt, updatedAt, ...rest } = data;
+  const out = { ...rest };
+  if (videoUrl  !== undefined) out.video_url  = videoUrl;
+  if (sortOrder !== undefined) out.sort_order = sortOrder;
+  return out;
+}
+
+const PortfolioDB = {
+  async getItems() {
+    const { data, error } = await supabaseClient.from('portfolio_items').select('*').order('sort_order', { ascending: true });
+    if (error) { toast('Could not load past collaborations: ' + error.message, 'error'); return []; }
+    return data.map(normalizePortfolioItem);
+  },
+  async getItem(id) {
+    const { data, error } = await supabaseClient.from('portfolio_items').select('*').eq('id', id).maybeSingle();
+    if (error) return null;
+    return normalizePortfolioItem(data);
+  },
+  async createItem(data) {
+    const row = { id: uid(), ...denormalizePortfolioItem(data) };
+    const { data: inserted, error } = await supabaseClient.from('portfolio_items').insert(row).select().single();
+    if (error) { toast('Could not save: ' + error.message, 'error'); return null; }
+    return normalizePortfolioItem(inserted);
+  },
+  async updateItem(id, data) {
+    const { data: updated, error } = await supabaseClient.from('portfolio_items').update(denormalizePortfolioItem(data)).eq('id', id).select().single();
+    if (error) { toast('Could not save: ' + error.message, 'error'); return null; }
+    return normalizePortfolioItem(updated);
+  },
+  async deleteItem(id) {
+    const { error } = await supabaseClient.from('portfolio_items').delete().eq('id', id);
+    if (error) toast('Could not delete: ' + error.message, 'error');
+  },
+};
+
 /* ── AUTH (Supabase) ────────────────────────────────────── */
 const Auth = {
   async isLoggedIn() {
@@ -1040,6 +1153,7 @@ let importData = [];
 let confirmCb  = null;
 let editingFaveId = null;
 let editingIgId = null;
+let editingPfId = null;
 
 /* ── NAVIGATION ─────────────────────────────────────────── */
 async function nav(view, id=null) {
@@ -1047,13 +1161,14 @@ async function nav(view, id=null) {
   if (view === 'editor')         editingId = id;
   if (view === 'faveEditor')     editingFaveId = id;
   if (view === 'instagramEditor') editingIgId = id;
+  if (view === 'portfolioEditor') editingPfId = id;
   document.querySelectorAll('.panel').forEach(p=>p.classList.add('hidden'));
   document.querySelectorAll('.sb-link[data-nav]').forEach(l=>l.classList.remove('active'));
   const panel = document.getElementById('panel'+view[0].toUpperCase()+view.slice(1));
   if (panel) panel.classList.remove('hidden');
   const link = document.querySelector(`.sb-link[data-nav="${view}"]`);
   if (link) link.classList.add('active');
-  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',instagram:'Instagram Feed',instagramEditor:id?'Edit Photo':'New Photo',brands:'Past Collaborations'};
+  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',instagram:'Instagram Feed',instagramEditor:id?'Edit Photo':'New Photo',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration'};
   document.getElementById('topbarLabel').innerHTML = `<strong>${labels[view]||view}</strong>`;
   if (view==='dashboard')        await renderDashboard();
   if (view==='posts')            await renderPostsTable();
@@ -1066,6 +1181,8 @@ async function nav(view, id=null) {
   if (view==='instagram')        await renderInstagramTable();
   if (view==='instagramEditor')  await initInstagramEditor(id);
   if (view==='brands')           await renderBrandsPanel();
+  if (view==='portfolio')        await renderPortfolioTable();
+  if (view==='portfolioEditor')  await initPortfolioEditor(id);
 }
 
 /* ── DASHBOARD ──────────────────────────────────────────── */
@@ -1307,12 +1424,11 @@ async function saveBrand(id) {
 }
 
 function confirmDelBrand(id) {
-  confirmCb = async () => {
+  openModal('Delete this brand?','This will remove it from the Work With Me page.', async ()=>{
     await BrandsDB.deleteBrand(id);
     toast('Brand deleted', 'success');
     renderBrandsPanel();
-  };
-  document.getElementById('confirmModal').classList.remove('hidden');
+  });
 }
 
 /* ── INSTAGRAM FEED TABLE ───────────────────────────────── */
@@ -1403,6 +1519,97 @@ function confirmDelInstagram(igId) {
     toast('Photo deleted.','success');
     if (curView==='instagramEditor') await nav('instagram');
     else await renderInstagramTable();
+  });
+}
+
+/* ── PAST COLLABORATIONS TABLE ──────────────────────────── */
+async function renderPortfolioTable() {
+  const st = document.getElementById('fPortfolioStatus')?.value||'';
+  let items = await PortfolioDB.getItems();
+  if (st) items = items.filter(p=>p.status===st);
+  document.getElementById('portfolioTableBody').innerHTML = portfolioRows(items);
+}
+
+function portfolioRows(items) {
+  if (!items.length) return `<div class="empty-state"><i class="fas fa-images"></i>No collaborations yet. <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="nav('portfolioEditor')">Add your first one</button></div>`;
+  return `<table><thead><tr><th style="width:70px;">Photo</th><th>Caption</th><th>Status</th><th style="width:100px;">Actions</th></tr></thead><tbody>
+    ${items.map(p=>`<tr>
+      <td><img src="${esc(p.image_url||'')}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;" /></td>
+      <td class="t-title">${esc(p.caption||'Untitled')}</td>
+      <td><span class="badge b-${p.status||'draft'}">${p.status||'draft'}</span></td>
+      <td><div class="action-btns">
+        <button class="btn-icon" onclick="nav('portfolioEditor','${p.id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+        ${p.videoUrl ? `<a class="btn-icon" href="${esc(p.videoUrl)}" target="_blank" title="Open Video"><i class="fas fa-play"></i></a>` : ''}
+        <button class="btn-icon del" onclick="confirmDelPortfolio('${p.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+/* ── PAST COLLABORATION EDITOR ──────────────────────────── */
+async function initPortfolioEditor(pfId) {
+  document.getElementById('pfImgUrl').value   = '';
+  document.getElementById('pfImgFile').value  = '';
+  document.getElementById('pfVideoUrl').value = '';
+  document.getElementById('pfCaption').value  = '';
+  document.getElementById('pfSort').value     = 0;
+  document.getElementById('pfStatus').value   = 'draft';
+  document.getElementById('pfImgPrev').className = 'feat-prev';
+  document.getElementById('btnPfDelete').classList.add('hidden');
+  setPfStatusUI('draft');
+
+  if (pfId) {
+    const p = await PortfolioDB.getItem(pfId);
+    if (p) {
+      document.getElementById('pfImgUrl').value   = p.image_url||'';
+      document.getElementById('pfVideoUrl').value = p.videoUrl||'';
+      document.getElementById('pfCaption').value  = p.caption||'';
+      document.getElementById('pfSort').value     = p.sortOrder||0;
+      document.getElementById('pfStatus').value   = p.status||'draft';
+      if (p.image_url) { const prev = document.getElementById('pfImgPrev'); prev.src = p.image_url; prev.className = 'feat-prev show'; }
+      setPfStatusUI(p.status||'draft');
+      document.getElementById('btnPfDelete').classList.remove('hidden');
+    }
+  }
+}
+
+function setPfStatusUI(status) {
+  document.getElementById('pfDot').className    = `s-dot ${status}`;
+  document.getElementById('pfLabel').textContent = status==='published'?'Published':'Draft';
+}
+
+function collectPfEditorData(status) {
+  return {
+    image_url: document.getElementById('pfImgUrl').value.trim(),
+    videoUrl:  document.getElementById('pfVideoUrl').value.trim(),
+    caption:   document.getElementById('pfCaption').value.trim(),
+    sortOrder: parseInt(document.getElementById('pfSort').value, 10) || 0,
+    status,
+  };
+}
+
+async function savePfItem(status) {
+  const data = collectPfEditorData(status);
+  if (!data.image_url) { toast('Add a photo URL before saving.','warning'); return; }
+  if (editingPfId) {
+    await PortfolioDB.updateItem(editingPfId, data);
+    toast(`Collaboration ${status==='published'?'published':'saved'}!`, 'success');
+  } else {
+    const p = await PortfolioDB.createItem(data);
+    if (p) editingPfId = p.id;
+    toast(`Collaboration ${status==='published'?'published':'saved as draft'}!`, 'success');
+  }
+  document.getElementById('btnPfDelete').classList.remove('hidden');
+  setPfStatusUI(status);
+  document.getElementById('pfStatus').value = status;
+}
+
+function confirmDelPortfolio(pfId) {
+  openModal('Delete this collaboration?','This will permanently remove it from the Past Collaborations gallery.', async ()=>{
+    await PortfolioDB.deleteItem(pfId);
+    toast('Deleted.','success');
+    if (curView==='portfolioEditor') await nav('portfolio');
+    else await renderPortfolioTable();
   });
 }
 
@@ -1809,6 +2016,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const fIgStatus = document.getElementById('fIgStatus');
   if (fIgStatus) fIgStatus.addEventListener('input', renderInstagramTable);
 
+  // Past collaborations table: filters
+  const fPortfolioStatus = document.getElementById('fPortfolioStatus');
+  if (fPortfolioStatus) fPortfolioStatus.addEventListener('input', renderPortfolioTable);
+
   // Instagram photo editor: status change
   document.getElementById('igStatus').addEventListener('change',e=>setIgStatusUI(e.target.value));
 
@@ -1846,6 +2057,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!url) return;
     document.getElementById('igImgUrl').value = url;
     const prev = document.getElementById('igImgPrev');
+    prev.src = url;
+    prev.className = 'feat-prev show';
+  });
+
+  // Past collaboration editor: status change
+  document.getElementById('pfStatus').addEventListener('change',e=>setPfStatusUI(e.target.value));
+
+  // Past collaboration editor: publish/draft buttons
+  document.getElementById('btnPfPublish').addEventListener('click',()=>savePfItem('published'));
+  document.getElementById('btnPfDraft').addEventListener('click',()=>savePfItem('draft'));
+
+  // Past collaboration editor: delete
+  document.getElementById('btnPfDelete').addEventListener('click',()=>{ if(editingPfId) confirmDelPortfolio(editingPfId); });
+
+  // Past collaboration editor: image URL preview
+  document.getElementById('pfImgUrl').addEventListener('input',e=>{
+    const prev = document.getElementById('pfImgPrev');
+    if (e.target.value) { prev.src=e.target.value; prev.className='feat-prev show'; }
+    else prev.className='feat-prev';
+  });
+
+  // Past collaboration editor: image file upload
+  document.getElementById('pfImgFile').addEventListener('change', async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    toast('Uploading image…','success');
+    const url = await uploadImageFile(file);
+    if (!url) return;
+    document.getElementById('pfImgUrl').value = url;
+    const prev = document.getElementById('pfImgPrev');
     prev.src = url;
     prev.className = 'feat-prev show';
   });

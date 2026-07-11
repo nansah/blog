@@ -410,3 +410,34 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     else el.classList.add('in-view');
   });
 })();
+
+// ── Live "past collaborations" portfolio gallery (editable in admin) ──────
+(async function renderPortfolioGallery() {
+  const grid = document.getElementById('portfolioGallery');
+  if (!grid || typeof supabaseClient === 'undefined') return;
+
+  const { data, error } = await supabaseClient
+    .from('portfolio_items')
+    .select('*')
+    .eq('status', 'published')
+    .order('sort_order', { ascending: true });
+
+  if (error || !data || !data.length) return; // keep the placeholder photos
+
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  grid.innerHTML = data.map(p => p.video_url
+    ? `<a href="${esc(p.video_url)}" class="page-gallery-item reveal" target="_blank" rel="noopener">
+        <img src="${esc(p.image_url)}" alt="${esc(p.caption || 'Past collaboration')}" loading="lazy" />
+        <span class="page-gallery-video-badge"><i class="fas fa-play"></i></span>
+      </a>`
+    : `<div class="page-gallery-item reveal">
+        <img src="${esc(p.image_url)}" alt="${esc(p.caption || 'Past collaboration')}" loading="lazy" />
+      </div>`
+  ).join('');
+
+  grid.querySelectorAll('.reveal').forEach(el => {
+    if (typeof revealObserver !== 'undefined') revealObserver.observe(el);
+    else el.classList.add('in-view');
+  });
+})();

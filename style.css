@@ -149,6 +149,16 @@ button { font-family: inherit; }
   padding-top: 0;
 }
 
+.page-gallery-item { position: relative; display: block; }
+.page-gallery-item img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: var(--r-sm); }
+.page-gallery-video-badge {
+  position: absolute; top: 10px; right: 10px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(28,23,18,0.6); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; pointer-events: none;
+}
+
 /* Theme variants now share the same warm cream hero — kept as hooks in case a
    page wants a subtle per-category tint. */
 .category-hero.lifestyle-theme,
