@@ -308,6 +308,7 @@
       <button class="sb-link" data-nav="social"><i class="fas fa-share-nodes"></i> Social Links</button>
       <button class="sb-link" data-nav="instagram"><i class="fab fa-instagram"></i> Instagram Feed</button>
       <button class="sb-link" data-nav="instagramEditor"><i class="fas fa-plus-circle"></i> New Photo</button>
+      <button class="sb-link" data-nav="brands"><i class="fas fa-handshake"></i> Past Collaborations</button>
       <a href="/" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
     </nav>
     <div class="sb-bottom">
@@ -688,6 +689,20 @@
       </div>
     </div>
 
+    <!-- ── PAST COLLABORATIONS ── -->
+    <div id="panelBrands" class="panel hidden">
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title">Past Collaborations</span>
+        </div>
+        <div style="display:flex; gap:10px; padding:16px 20px; border-bottom:1px solid var(--border);">
+          <input type="text" class="s-in" id="newBrandName" placeholder="Add a brand name…" style="flex:1;" />
+          <button class="btn btn-primary btn-sm" id="btnAddBrand"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div id="brandsListBody" style="padding:16px 20px; display:flex; flex-direction:column; gap:10px;"></div>
+      </div>
+    </div>
+
     <!-- ── INSTAGRAM FEED LIST ── -->
     <div id="panelInstagram" class="panel hidden">
       <div class="table-wrap">
@@ -933,6 +948,31 @@ const SocialDB = {
   },
 };
 
+/* ── PAST COLLABORATIONS (brand list, Work With Me page) ── */
+const BrandsDB = {
+  async getBrands() {
+    const { data, error } = await supabaseClient.from('brands').select('*').order('sort_order', { ascending: true });
+    if (error) { toast('Could not load brands: ' + error.message, 'error'); return []; }
+    return data;
+  },
+  async createBrand(name) {
+    const row = { id: uid(), name, sort_order: Date.now() };
+    const { data, error } = await supabaseClient.from('brands').insert(row).select().single();
+    if (error) { toast('Could not add brand: ' + error.message, 'error'); return null; }
+    return data;
+  },
+  async updateBrand(id, name) {
+    const { error } = await supabaseClient.from('brands').update({ name }).eq('id', id);
+    if (error) { toast('Could not save brand: ' + error.message, 'error'); return false; }
+    return true;
+  },
+  async deleteBrand(id) {
+    const { error } = await supabaseClient.from('brands').delete().eq('id', id);
+    if (error) { toast('Could not delete brand: ' + error.message, 'error'); return false; }
+    return true;
+  },
+};
+
 /* ── INSTAGRAM FEED (homepage photo grid) ───────────────── */
 function normalizeIgPhoto(row) {
   if (!row) return null;
@@ -1013,7 +1053,7 @@ async function nav(view, id=null) {
   if (panel) panel.classList.remove('hidden');
   const link = document.querySelector(`.sb-link[data-nav="${view}"]`);
   if (link) link.classList.add('active');
-  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',instagram:'Instagram Feed',instagramEditor:id?'Edit Photo':'New Photo'};
+  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',instagram:'Instagram Feed',instagramEditor:id?'Edit Photo':'New Photo',brands:'Past Collaborations'};
   document.getElementById('topbarLabel').innerHTML = `<strong>${labels[view]||view}</strong>`;
   if (view==='dashboard')        await renderDashboard();
   if (view==='posts')            await renderPostsTable();
@@ -1025,6 +1065,7 @@ async function nav(view, id=null) {
   if (view==='social')           await renderSocialPanel();
   if (view==='instagram')        await renderInstagramTable();
   if (view==='instagramEditor')  await initInstagramEditor(id);
+  if (view==='brands')           await renderBrandsPanel();
 }
 
 /* ── DASHBOARD ──────────────────────────────────────────── */
@@ -1240,6 +1281,38 @@ async function saveSocialLink(id) {
   card.querySelectorAll('[data-field]').forEach(el => { data[el.dataset.field] = el.value.trim(); });
   const ok = await SocialDB.updateLink(id, data);
   if (ok) toast(`${id[0].toUpperCase()+id.slice(1)} updated!`, 'success');
+}
+
+/* ── PAST COLLABORATIONS PANEL ─────────────────────────── */
+async function renderBrandsPanel() {
+  const brands = await BrandsDB.getBrands();
+  const body = document.getElementById('brandsListBody');
+  if (!brands.length) { body.innerHTML = `<div class="empty-state"><i class="fas fa-handshake"></i>No brands yet. Add one above.</div>`; return; }
+
+  body.innerHTML = brands.map(b => `
+    <div class="s-field" data-brand-row="${b.id}" style="flex-direction:row; align-items:center; gap:10px;">
+      <input type="text" class="s-in" data-field="name" value="${esc(b.name||'')}" style="flex:1;" />
+      <button class="btn-icon" title="Save" onclick="saveBrand('${b.id}')"><i class="fas fa-check"></i></button>
+      <button class="btn-icon del" title="Delete" onclick="confirmDelBrand('${b.id}')"><i class="fas fa-trash"></i></button>
+    </div>
+  `).join('');
+}
+
+async function saveBrand(id) {
+  const row = document.querySelector(`[data-brand-row="${id}"]`);
+  const name = row.querySelector('[data-field="name"]').value.trim();
+  if (!name) { toast('Brand name cannot be empty', 'error'); return; }
+  const ok = await BrandsDB.updateBrand(id, name);
+  if (ok) toast('Brand updated!', 'success');
+}
+
+function confirmDelBrand(id) {
+  confirmCb = async () => {
+    await BrandsDB.deleteBrand(id);
+    toast('Brand deleted', 'success');
+    renderBrandsPanel();
+  };
+  document.getElementById('confirmModal').classList.remove('hidden');
 }
 
 /* ── INSTAGRAM FEED TABLE ───────────────────────────────── */
@@ -1745,6 +1818,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Instagram photo editor: delete
   document.getElementById('btnIgDelete').addEventListener('click',()=>{ if(editingIgId) confirmDelInstagram(editingIgId); });
+
+  // Past collaborations: add brand
+  document.getElementById('btnAddBrand').addEventListener('click', async ()=>{
+    const input = document.getElementById('newBrandName');
+    const name = input.value.trim();
+    if (!name) { toast('Enter a brand name', 'error'); return; }
+    const created = await BrandsDB.createBrand(name);
+    if (created) { input.value = ''; toast('Brand added!', 'success'); renderBrandsPanel(); }
+  });
+  document.getElementById('newBrandName').addEventListener('keydown', e=>{
+    if (e.key === 'Enter') document.getElementById('btnAddBrand').click();
+  });
 
   // Instagram photo editor: image URL preview
   document.getElementById('igImgUrl').addEventListener('input',e=>{

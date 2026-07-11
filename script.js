@@ -388,3 +388,25 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     else el.classList.add('in-view');
   });
 })();
+
+// ── Live "past collaborations" brand list (editable in admin) ─────────────
+(async function renderBrands() {
+  const grid = document.getElementById('brandsGrid');
+  if (!grid || typeof supabaseClient === 'undefined') return;
+
+  const { data, error } = await supabaseClient
+    .from('brands')
+    .select('*')
+    .order('sort_order', { ascending: true });
+
+  if (error || !data || !data.length) return; // keep the placeholder brands
+
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  grid.innerHTML = data.map(b => `<div class="brand-item reveal">${esc(b.name)}</div>`).join('');
+
+  grid.querySelectorAll('.reveal').forEach(el => {
+    if (typeof revealObserver !== 'undefined') revealObserver.observe(el);
+    else el.classList.add('in-view');
+  });
+})();
