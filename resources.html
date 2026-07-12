@@ -104,6 +104,7 @@
                 <label for="leadCompany">Company</label>
                 <input type="text" id="leadCompany" name="company" tabindex="-1" autocomplete="off" />
               </div>
+              <div class="cf-turnstile" data-sitekey="0x4AAAAAAD0gcQWVDCAJfk6Y"></div>
               <button type="submit" class="btn btn-gold" style="align-self: flex-start;">Send Me the Worksheet <i class="fas fa-paper-plane"></i></button>
               <p id="leadFormNote" style="font-size:12px;color:var(--muted);"><i class="fas fa-lock"></i> No spam, ever. Unsubscribe at any time.</p>
             </form>
@@ -172,6 +173,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="supabase-client.js"></script>
   <script src="script.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script>
     const leadForm = document.getElementById('leadForm');
     const leadFormLoadedAt = Date.now();
@@ -194,13 +196,35 @@
           return;
         }
 
+        const turnstileToken = leadForm.querySelector('[name="cf-turnstile-response"]')?.value;
+        if (!turnstileToken) {
+          note.textContent = 'Please complete the verification check, then try again.';
+          note.style.color = '#c0392b';
+          return;
+        }
+
         const original = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = 'Sending…';
 
-        const { error } = await supabaseClient.from('leads').insert({
-          email, name, source: 'wardrobe-audit-worksheet',
-        });
+        let error = null;
+        try {
+          const res = await fetch(`${SUPABASE_URL}/functions/v1/submit-lead`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              apikey: SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ email, name, source: 'wardrobe-audit-worksheet', turnstileToken }),
+          });
+          const result = await res.json();
+          if (!res.ok || !result.success) error = { message: result.error || 'Submission failed' };
+        } catch {
+          error = { message: 'Network error' };
+        }
+
+        if (typeof turnstile !== 'undefined') turnstile.reset();
 
         btn.disabled = false;
         if (error) {
