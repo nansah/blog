@@ -494,9 +494,8 @@
                 <span class="meta-lbl">Or upload</span>
                 <input type="file" id="eImgFile" accept="image/*" class="file-input" />
               </div>
-              <img id="imgPrev" class="feat-prev" src="" alt="" />
               <div class="focal-picker" id="imgFocalPicker">
-                <img id="imgFocalImg" src="" alt="" />
+                <img id="imgPrev" src="" alt="" />
                 <div class="focal-picker-marker" id="imgFocalMarker"></div>
               </div>
               <p class="focal-picker-hint" id="imgFocalHint" style="display:none;">Click the image to set its focal point (what stays visible when cropped).</p>
@@ -903,9 +902,8 @@
               <span class="meta-lbl">Or upload</span>
               <input type="file" id="prImgFile" accept="image/*" class="file-input" />
             </div>
-            <img id="prImgPrev" class="feat-prev" src="" alt="" />
             <div class="focal-picker" id="prFocalPicker">
-              <img id="prFocalImg" src="" alt="" />
+              <img id="prImgPrev" src="" alt="" />
               <div class="focal-picker-marker" id="prFocalMarker"></div>
             </div>
             <p class="focal-picker-hint" id="prFocalHint" style="display:none;">Click the image to set its focal point (what stays visible when cropped).</p>
@@ -1369,6 +1367,7 @@ async function nav(view, id=null) {
   if (view === 'instagramEditor') editingIgId = id;
   if (view === 'portfolioEditor') editingPfId = id;
   if (view === 'pressEditor')    editingPrId = id;
+  try { localStorage.setItem('adminLastView', JSON.stringify({ view, id })); } catch {}
   document.querySelectorAll('.panel').forEach(p=>p.classList.add('hidden'));
   document.querySelectorAll('.sb-link[data-nav]').forEach(l=>l.classList.remove('active'));
   const panel = document.getElementById('panel'+view[0].toUpperCase()+view.slice(1));
@@ -1857,10 +1856,9 @@ async function initPressEditor(prId) {
   document.getElementById('prBadge').value    = 'Digital';
   document.getElementById('prSort').value     = 0;
   document.getElementById('prStatus').value   = 'draft';
-  document.getElementById('prImgPrev').className = 'feat-prev';
   document.getElementById('prFocalX').value = 50;
   document.getElementById('prFocalY').value = 50;
-  showFocalPicker('prFocalImg','prFocalPicker','prFocalHint','',50,50,'prFocalMarker');
+  showFocalPicker('prImgPrev','prFocalPicker','prFocalHint','',50,50,'prFocalMarker');
   document.getElementById('btnPrDelete').classList.add('hidden');
   setPrStatusUI('draft');
 
@@ -1878,8 +1876,7 @@ async function initPressEditor(prId) {
       document.getElementById('prFocalX').value = fx;
       document.getElementById('prFocalY').value = fy;
       if (p.imageUrl) {
-        const prev = document.getElementById('prImgPrev'); prev.src = p.imageUrl; prev.className = 'feat-prev show';
-        showFocalPicker('prFocalImg','prFocalPicker','prFocalHint',p.imageUrl,fx,fy,'prFocalMarker');
+        showFocalPicker('prImgPrev','prFocalPicker','prFocalHint',p.imageUrl,fx,fy,'prFocalMarker');
       }
       setPrStatusUI(p.status||'draft');
       document.getElementById('btnPrDelete').classList.remove('hidden');
@@ -1946,10 +1943,9 @@ async function initEditor(postId) {
   document.getElementById('eImgFile').value  = '';
   document.getElementById('eDate').value     = now;
   document.getElementById('eStatus').value   = 'draft';
-  document.getElementById('imgPrev').className = 'feat-prev';
   document.getElementById('eFocalX').value = 50;
   document.getElementById('eFocalY').value = 50;
-  showFocalPicker('imgFocalImg','imgFocalPicker','imgFocalHint','',50,50,'imgFocalMarker');
+  showFocalPicker('imgPrev','imgFocalPicker','imgFocalHint','',50,50,'imgFocalMarker');
   document.getElementById('btnDelete').classList.add('hidden');
   setStatusUI('draft');
 
@@ -1971,8 +1967,7 @@ async function initEditor(postId) {
       document.getElementById('eFocalX').value = fx;
       document.getElementById('eFocalY').value = fy;
       if (p.image) {
-        const prev = document.getElementById('imgPrev'); prev.src = p.image; prev.className = 'feat-prev show';
-        showFocalPicker('imgFocalImg','imgFocalPicker','imgFocalHint',p.image,fx,fy,'imgFocalMarker');
+        showFocalPicker('imgPrev','imgFocalPicker','imgFocalHint',p.image,fx,fy,'imgFocalMarker');
       }
       setStatusUI(p.status||'draft');
       document.getElementById('btnDelete').classList.remove('hidden');
@@ -2222,7 +2217,12 @@ async function enterApp() {
     document.getElementById('sbUserName').textContent = email;
     document.getElementById('avatarInitial').textContent = email[0].toUpperCase();
   }
-  nav('dashboard');
+  let lastView = { view: 'dashboard', id: null };
+  try {
+    const saved = JSON.parse(localStorage.getItem('adminLastView') || 'null');
+    if (saved && saved.view) lastView = saved;
+  } catch {}
+  nav(lastView.view, lastView.id);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -2282,16 +2282,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Editor: featured image URL
   document.getElementById('eImgUrl').addEventListener('input',e=>{
-    const prev = document.getElementById('imgPrev');
     document.getElementById('eFocalX').value = 50;
     document.getElementById('eFocalY').value = 50;
-    if (e.target.value) {
-      prev.src=e.target.value; prev.className='feat-prev show';
-      showFocalPicker('imgFocalImg','imgFocalPicker','imgFocalHint',e.target.value,50,50,'imgFocalMarker');
-    } else {
-      prev.className='feat-prev';
-      showFocalPicker('imgFocalImg','imgFocalPicker','imgFocalHint','',50,50,'imgFocalMarker');
-    }
+    showFocalPicker('imgPrev','imgFocalPicker','imgFocalHint',e.target.value,50,50,'imgFocalMarker');
   });
 
   // Editor: featured image file
@@ -2301,16 +2294,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const url = await uploadImageFile(file);
     if (!url) return;
     document.getElementById('eImgUrl').value = url;
-    const prev = document.getElementById('imgPrev');
-    prev.src = url;
-    prev.className = 'feat-prev show';
     document.getElementById('eFocalX').value = 50;
     document.getElementById('eFocalY').value = 50;
-    showFocalPicker('imgFocalImg','imgFocalPicker','imgFocalHint',url,50,50,'imgFocalMarker');
+    showFocalPicker('imgPrev','imgFocalPicker','imgFocalHint',url,50,50,'imgFocalMarker');
   });
 
   // Editor: featured image focal point picker
-  setupFocalPicker('imgFocalPicker','imgFocalImg','imgFocalMarker','eFocalX','eFocalY');
+  setupFocalPicker('imgFocalPicker','imgPrev','imgFocalMarker','eFocalX','eFocalY');
 
   // Editor: auto-calc read time
   document.getElementById('btnCalcRead').addEventListener('click',()=>{
@@ -2448,16 +2438,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Press feature editor: image URL preview
   document.getElementById('prImgUrl').addEventListener('input',e=>{
-    const prev = document.getElementById('prImgPrev');
     document.getElementById('prFocalX').value = 50;
     document.getElementById('prFocalY').value = 50;
-    if (e.target.value) {
-      prev.src=e.target.value; prev.className='feat-prev show';
-      showFocalPicker('prFocalImg','prFocalPicker','prFocalHint',e.target.value,50,50,'prFocalMarker');
-    } else {
-      prev.className='feat-prev';
-      showFocalPicker('prFocalImg','prFocalPicker','prFocalHint','',50,50,'prFocalMarker');
-    }
+    showFocalPicker('prImgPrev','prFocalPicker','prFocalHint',e.target.value,50,50,'prFocalMarker');
   });
 
   // Press feature editor: image file upload
@@ -2467,16 +2450,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const url = await uploadImageFile(file);
     if (!url) return;
     document.getElementById('prImgUrl').value = url;
-    const prev = document.getElementById('prImgPrev');
-    prev.src = url;
-    prev.className = 'feat-prev show';
     document.getElementById('prFocalX').value = 50;
     document.getElementById('prFocalY').value = 50;
-    showFocalPicker('prFocalImg','prFocalPicker','prFocalHint',url,50,50,'prFocalMarker');
+    showFocalPicker('prImgPrev','prFocalPicker','prFocalHint',url,50,50,'prFocalMarker');
   });
 
   // Press feature editor: focal point picker
-  setupFocalPicker('prFocalPicker','prFocalImg','prFocalMarker','prFocalX','prFocalY');
+  setupFocalPicker('prFocalPicker','prImgPrev','prFocalMarker','prFocalX','prFocalY');
 
   // Leads: export CSV
   document.getElementById('btnExportLeads').addEventListener('click', async ()=>{
