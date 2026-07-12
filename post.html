@@ -305,9 +305,8 @@
       catch { return iso||''; }
     };
 
-    async function getPost(id) {
-      const { data, error } = await supabaseClient.from('posts').select('*').eq('id', id).maybeSingle();
-      if (error || !data) return null;
+    function normalizePost(data) {
+      if (!data) return null;
       // Normalize snake_case DB columns to the camelCase fields the renderer expects.
       return {
         ...data,
@@ -315,6 +314,18 @@
         createdAt:   data.created_at,
         readTime:    data.read_time,
       };
+    }
+
+    async function getPostBySlug(slug) {
+      const { data, error } = await supabaseClient.from('posts').select('*').eq('slug', slug).maybeSingle();
+      if (error) return null;
+      return normalizePost(data);
+    }
+
+    async function getPostById(id) {
+      const { data, error } = await supabaseClient.from('posts').select('*').eq('id', id).maybeSingle();
+      if (error) return null;
+      return normalizePost(data);
     }
 
     function getCatHref(cat) {
@@ -326,7 +337,7 @@
       const root = document.getElementById('postRoot');
       const pageTitle = `${post.title} — Nana Yaa Ansah`;
       const desc = post.excerpt || 'Read on Nana Yaa Ansah, New York City lifestyle influencer.';
-      const url = `https://nanayaaansah.com/post?id=${post.id}`;
+      const url = `https://nanayaaansah.com/post/${post.slug || post.id}`;
       const image = post.image || 'https://nanayaaansah.com/images/hero-nana-yaa.jpg';
 
       document.title = pageTitle;
@@ -434,12 +445,19 @@
       if (bar) bar.style.width = pct + '%';
     }, { passive: true });
 
-    // Handle ?edit= deep-link from post.html itself
+    // Resolves the post from a clean URL (/post/my-post-title, via the
+    // Vercel rewrite) first, then falls back to the older ?slug= / ?id=
+    // query-string links so nothing already shared breaks.
     (async function init() {
       const params = new URLSearchParams(window.location.search);
-      const id     = params.get('id') || params.get('edit');
-      if (!id) { renderNotFound(); return; }
-      const post = await getPost(id);
+      const pathSlug = decodeURIComponent(window.location.pathname.replace(/^\/post\/?/, '').replace(/\/$/, ''));
+      const slug = pathSlug || params.get('slug');
+      const id   = params.get('id') || params.get('edit');
+
+      let post = null;
+      if (slug) post = await getPostBySlug(slug);
+      else if (id) post = await getPostById(id);
+
       if (post) renderPost(post);
       else renderNotFound();
     })();

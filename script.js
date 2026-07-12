@@ -265,7 +265,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     const card = document.createElement('article');
     card.className = 'post-card reveal admin-post';
     card.innerHTML = `
-      <a href="/post?id=${esc(post.id)}" class="post-card-link" style="display:block;text-decoration:none;color:inherit;">
+      <a href="/post/${esc(post.slug || post.id)}" class="post-card-link" style="display:block;text-decoration:none;color:inherit;">
         <div class="post-img-wrap">
           ${post.image
             ? `<img src="${esc(post.image)}" alt="${esc(post.title)}" loading="lazy" />`
