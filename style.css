@@ -944,7 +944,7 @@ body.search-open {
 /* ============================================
    FOOTER
    ============================================ */
-.footer { background: #b7410e; padding: 80px 0 0; }
+.footer { background: #964B00; padding: 80px 0 0; }
 
 .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 60px; margin-bottom: 60px; }
 
