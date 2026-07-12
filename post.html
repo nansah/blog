@@ -301,7 +301,7 @@
     /* ── Post Viewer ───────────────────────────────────────────────────────── */
     const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const fmtDate = iso => {
-      try { return new Date(iso).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); }
+      try { return new Date(iso).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'America/New_York'}); }
       catch { return iso||''; }
     };
 

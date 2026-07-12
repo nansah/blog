@@ -437,7 +437,7 @@
                 <select class="meta-sel" id="eStatus"><option value="draft">Draft</option><option value="published">Published</option></select>
               </div>
               <div class="meta-field">
-                <span class="meta-lbl">Publish Date</span>
+                <span class="meta-lbl">Publish Date (ET)</span>
                 <input type="datetime-local" class="meta-in" id="eDate" />
               </div>
               <div class="pub-btns">
@@ -873,7 +873,33 @@
 const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const stripHtml = h => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent||d.innerText||''; };
 const slugify = s => (s||'').toLowerCase().trim().replace(/[^\w\s-]/g,'').replace(/[\s_-]+/g,'-').replace(/^-+|-+$/g,'');
-const fmtDate = iso => { try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return iso?.slice(0,10)||'—'; } };
+const fmtDate = iso => { try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'America/New_York'}); } catch { return iso?.slice(0,10)||'—'; } };
+
+// The Publish Date field is a datetime-local input, which has no timezone of
+// its own — whatever string is typed/shown is meaningless without a fixed
+// reference. Nana Yaa publishes on Eastern time, so these helpers always
+// read/write that field as America/New_York wall-clock time (DST-aware via
+// Intl), regardless of what timezone the admin's own OS/browser is set to.
+function isoToNYDatetimeLocal(iso) {
+  const date = new Date(iso);
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+  }).formatToParts(date).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+}
+function nyDatetimeLocalToISO(dtLocalStr) {
+  const [datePart, timePart] = dtLocalStr.split('T');
+  const [y, m, d] = datePart.split('-').map(Number);
+  const [hh, mm] = timePart.split(':').map(Number);
+  const guess = new Date(Date.UTC(y, m - 1, d, hh, mm));
+  const nyParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(guess).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  const nyOffsetMs = Date.UTC(nyParts.year, nyParts.month - 1, nyParts.day, nyParts.hour === '24' ? 0 : nyParts.hour, nyParts.minute, nyParts.second) - guess.getTime();
+  return new Date(Date.UTC(y, m - 1, d, hh, mm) - nyOffsetMs).toISOString();
+}
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const wordCount = html => stripHtml(html).split(/\s+/).filter(Boolean).length;
 
@@ -1616,7 +1642,7 @@ function confirmDelPortfolio(pfId) {
 /* ── EDITOR ─────────────────────────────────────────────── */
 async function initEditor(postId) {
   // Reset fields
-  const now = new Date().toISOString().slice(0,16);
+  const now = isoToNYDatetimeLocal(new Date().toISOString());
   document.getElementById('eTitle').value    = '';
   document.getElementById('eSlug').value     = '';
   document.getElementById('eContent').innerHTML = '';
@@ -1645,7 +1671,7 @@ async function initEditor(postId) {
       document.getElementById('eReadTime').value = p.readTime||'';
       document.getElementById('eStatus').value   = p.status||'draft';
       const d = p.publishedAt||p.createdAt;
-      if (d) document.getElementById('eDate').value = d.slice(0,16);
+      if (d) document.getElementById('eDate').value = isoToNYDatetimeLocal(d);
       if (p.image) { const prev = document.getElementById('imgPrev'); prev.src = p.image; prev.className = 'feat-prev show'; }
       setStatusUI(p.status||'draft');
       document.getElementById('btnDelete').classList.remove('hidden');
@@ -1669,7 +1695,7 @@ function collectEditorData(status) {
   const image   = document.getElementById('eImgUrl').value.trim();
   const readTime= document.getElementById('eReadTime').value.trim();
   const dateVal = document.getElementById('eDate').value;
-  return { title, slug, content, excerpt, category, tags, image, readTime, status, publishedAt: dateVal?new Date(dateVal).toISOString():new Date().toISOString() };
+  return { title, slug, content, excerpt, category, tags, image, readTime, status, publishedAt: dateVal?nyDatetimeLocalToISO(dateVal):new Date().toISOString() };
 }
 
 async function savePost(status) {

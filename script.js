@@ -256,7 +256,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   if (error || !relevant || !relevant.length) return;
 
   const fmtDate = iso => {
-    try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+    try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }); }
     catch { return ''; }
   };
   const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
