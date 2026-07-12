@@ -1,7 +1,19 @@
 {
-  "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/post/:slug*", "destination": "/post.html" }
+    { "source": "/post/:slug", "destination": "/post.html" },
+    { "source": "/post", "destination": "/post.html" },
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/beauty", "destination": "/beauty.html" },
+    { "source": "/blog", "destination": "/blog.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/faith", "destination": "/faith.html" },
+    { "source": "/fashion", "destination": "/fashion.html" },
+    { "source": "/faves", "destination": "/faves.html" },
+    { "source": "/lifestyle", "destination": "/lifestyle.html" },
+    { "source": "/press", "destination": "/press.html" },
+    { "source": "/resources", "destination": "/resources.html" },
+    { "source": "/work-with-me", "destination": "/work-with-me.html" },
+    { "source": "/admin", "destination": "/admin.html" }
   ]
 }

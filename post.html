@@ -337,7 +337,7 @@
       const root = document.getElementById('postRoot');
       const pageTitle = `${post.title} — Nana Yaa Ansah`;
       const desc = post.excerpt || 'Read on Nana Yaa Ansah, New York City lifestyle influencer.';
-      const url = `https://nanayaaansah.com/post?slug=${post.slug || post.id}`;
+      const url = `https://nanayaaansah.com/post/${post.slug || post.id}`;
       const image = post.image || 'https://nanayaaansah.com/images/hero-nana-yaa.jpg';
 
       document.title = pageTitle;

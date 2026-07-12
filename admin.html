@@ -1221,7 +1221,7 @@ function postRows(posts) {
       <td style="white-space:nowrap;font-size:12px;color:var(--muted);">${fmtDate(p.publishedAt||p.createdAt)}</td>
       <td><div class="action-btns">
         <button class="btn-icon" onclick="nav('editor','${p.id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-        <a class="btn-icon" href="/post?slug=${p.slug||p.id}" target="_blank" title="Preview"><i class="fas fa-eye"></i></a>
+        <a class="btn-icon" href="/post/${p.slug||p.id}" target="_blank" title="Preview"><i class="fas fa-eye"></i></a>
         <button class="btn-icon del" onclick="confirmDel('${p.id}')" title="Delete"><i class="fas fa-trash"></i></button>
       </div></td>
     </tr>`).join('')}
