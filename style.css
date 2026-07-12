@@ -103,7 +103,7 @@ button { font-family: inherit; }
 }
 
 .category-copy h1 em {
-  color: var(--gold);
+  color: #b7410e;
   font-style: italic;
 }
 
@@ -884,7 +884,7 @@ body.search-open {
   margin: 10px 0 24px;
   text-transform: lowercase;
 }
-.about-title em { font-style: italic; color: var(--gold); }
+.about-title em { font-style: italic; color: #b7410e; }
 
 .about-text { font-size: 15.5px; color: var(--muted); line-height: 1.85; margin-bottom: 16px; }
 
@@ -923,7 +923,7 @@ body.search-open {
   color: var(--black); margin: 14px 0 18px;
   text-transform: lowercase;
 }
-.newsletter-title em { font-style: italic; color: var(--gold); }
+.newsletter-title em { font-style: italic; color: #b7410e; }
 
 .newsletter-sub { font-size: 15px; color: var(--muted); line-height: 1.8; margin-bottom: 40px; }
 
@@ -1062,7 +1062,7 @@ body.search-open {
   text-transform: lowercase;
 }
 
-.utility-hero-title em { font-style: italic; color: var(--gold); }
+.utility-hero-title em { font-style: italic; color: #b7410e; }
 
 .utility-hero-text p {
   font-size: 15px;
@@ -1405,7 +1405,7 @@ body.search-open {
   margin-bottom: 28px;
 }
 
-.press-pullquote blockquote em { color: var(--gold); }
+.press-pullquote blockquote em { color: #b7410e; }
 
 .press-pullquote cite {
   display: block;
