@@ -99,6 +99,11 @@
                 <label for="leadEmail">Email Address</label>
                 <input type="email" id="leadEmail" name="email" placeholder="you@example.com" required />
               </div>
+              <!-- Honeypot: hidden from real visitors, but bots that fill every field trip it. -->
+              <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+                <label for="leadCompany">Company</label>
+                <input type="text" id="leadCompany" name="company" tabindex="-1" autocomplete="off" />
+              </div>
               <button type="submit" class="btn btn-gold" style="align-self: flex-start;">Send Me the Worksheet <i class="fas fa-paper-plane"></i></button>
               <p id="leadFormNote" style="font-size:12px;color:var(--muted);"><i class="fas fa-lock"></i> No spam, ever. Unsubscribe at any time.</p>
             </form>
@@ -169,6 +174,7 @@
   <script src="script.js"></script>
   <script>
     const leadForm = document.getElementById('leadForm');
+    const leadFormLoadedAt = Date.now();
     if (leadForm) {
       leadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -177,6 +183,16 @@
         const name  = document.getElementById('leadName').value.trim();
         const email = document.getElementById('leadEmail').value.trim();
         if (!email) return;
+
+        // Bot check: honeypot field filled, or submitted implausibly fast.
+        // Fail silently with a fake success so bots don't learn to adapt.
+        const honeypot = document.getElementById('leadCompany').value.trim();
+        const tooFast  = Date.now() - leadFormLoadedAt < 1500;
+        if (honeypot || tooFast) {
+          leadForm.reset();
+          note.textContent = 'Sent! Check your inbox.';
+          return;
+        }
 
         const original = btn.innerHTML;
         btn.disabled = true;

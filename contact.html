@@ -123,6 +123,11 @@
                 <label for="message">Your Message</label>
                 <textarea id="message" name="message" placeholder="Tell me what you have in mind…" required></textarea>
               </div>
+              <!-- Honeypot: hidden from real visitors, but bots that fill every field trip it. -->
+              <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+                <label for="website">Website</label>
+                <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+              </div>
               <button type="submit" class="btn btn-gold" style="align-self: flex-start;">Send Message <i class="fas fa-paper-plane"></i></button>
               <p id="contactFormNote" style="font-size:12px;color:var(--muted);"></p>
             </form>
@@ -338,12 +343,23 @@
     const ROUTES_TO_PARTNERSHIPS = ['collaboration', 'press', 'speaking', 'newsletter'];
 
     const contactForm = document.getElementById('contactForm');
+    const contactFormLoadedAt = Date.now();
     if (contactForm) {
       contactForm.addEventListener('submit', async e => {
         e.preventDefault();
         const btn  = contactForm.querySelector('button[type="submit"]');
         const note = document.getElementById('contactFormNote');
         const original = btn.innerHTML;
+
+        // Bot check: honeypot field filled, or submitted implausibly fast.
+        // Fail silently with a fake success so bots don't learn to adapt.
+        const honeypot = document.getElementById('website').value.trim();
+        const tooFast  = Date.now() - contactFormLoadedAt < 1500;
+        if (honeypot || tooFast) {
+          contactForm.reset();
+          note.textContent = 'Sent! I\'ll be in touch soon.';
+          return;
+        }
 
         const subjectValue = document.getElementById('subject').value;
         const routeToPartnerships = ROUTES_TO_PARTNERSHIPS.includes(subjectValue);
