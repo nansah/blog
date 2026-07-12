@@ -22,9 +22,9 @@
   --ease:       cubic-bezier(0.4, 0, 0.2, 1);
   --transition: 0.3s var(--ease);
 
-  --shadow-sm:  0 2px 10px rgba(58,49,41,0.06);
-  --shadow-md:  0 10px 34px rgba(58,49,41,0.09);
-  --shadow-lg:  0 24px 64px rgba(58,49,41,0.13);
+  --shadow-sm:  0 2px 10px rgba(183,65,14,0.06);
+  --shadow-md:  0 10px 34px rgba(183,65,14,0.09);
+  --shadow-lg:  0 24px 64px rgba(183,65,14,0.13);
 
   --r-sm: 3px;
   --r-md: 6px;
@@ -246,7 +246,7 @@ button { font-family: inherit; }
   background: rgba(255,255,255,0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 1px 20px rgba(58,49,41,0.07);
+  box-shadow: 0 1px 20px rgba(183,65,14,0.07);
   border-bottom: 1px solid var(--border);
 }
 
@@ -287,16 +287,16 @@ button { font-family: inherit; }
 }
 
 .category-page .header .nav-logo a {
-  color: var(--black);
+  color: #b7410e;
 }
 
 .nav-logo a {
   font-family: var(--font-serif); font-size: 30px; font-weight: 600; font-style: normal;
-  letter-spacing: 0.01em; color: var(--black);
+  letter-spacing: 0.01em; color: #b7410e;
   text-transform: lowercase;
   transition: color var(--transition);
 }
-.header.scrolled .nav-logo a { color: var(--black); }
+.header.scrolled .nav-logo a { color: #b7410e; }
 
 .nav-search {
   background: none; border: none; cursor: pointer;
@@ -994,7 +994,7 @@ body.search-open {
   display: flex; align-items: center; justify-content: center;
 }
 .scroll-top-btn.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
-.scroll-top-btn:hover { background: var(--black); transform: translateY(-4px); }
+.scroll-top-btn:hover { background: #b7410e; transform: translateY(-4px); }
 
 /* ============================================
    REVEAL ANIMATIONS
