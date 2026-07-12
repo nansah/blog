@@ -47,6 +47,6 @@ create trigger press_features_set_updated_at
 
 -- Seed with the current real press features so the page has content immediately.
 insert into press_features (id, outlet, headline, url, image_url, badge, sort_order, status) values
-  ('press-1', 'Essence', 'Hair Street Style: Rock These Hair Trends Now', 'https://www.essence.com/hair/hair-street-style-rock-these-hair-trends-now/', 'https://picsum.photos/seed/press-essence/800/450', 'Digital', 10, 'published'),
+  ('press-1', 'Essence', 'Hair Street Style: Rock These Hair Trends Now', 'https://www.essence.com/hair/hair-street-style-rock-these-hair-trends-now/', '/images/nana_yaa_essence.webp', 'Digital', 10, 'published'),
   ('press-2', 'Marie Claire', 'The Best Designer-Style Beach Bags To Carry Everywhere', 'https://www.marieclaire.com/fashion/g22003398/best-beach-bags/', 'https://picsum.photos/seed/press-marieclaire/800/450', 'Digital', 20, 'published')
 on conflict (id) do nothing;
