@@ -1031,20 +1031,21 @@ async function uploadImageFile(file) {
 /* ── FOCAL POINT PICKER (featured images, press thumbnails) ────────────── */
 // Lets the admin click a preview image to choose which part of it stays
 // visible when the site crops it to a fixed aspect-ratio box elsewhere.
-function setupFocalPicker(pickerId, markerId, xInputId, yInputId) {
+function setupFocalPicker(pickerId, imgId, markerId, xInputId, yInputId) {
   document.getElementById(pickerId).addEventListener('click', e => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.round(Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100)));
     const y = Math.round(Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100)));
     document.getElementById(xInputId).value = x;
     document.getElementById(yInputId).value = y;
-    positionFocalMarker(markerId, x, y);
+    positionFocalMarker(imgId, markerId, x, y);
   });
 }
-function positionFocalMarker(markerId, x, y) {
+function positionFocalMarker(imgId, markerId, x, y) {
   const marker = document.getElementById(markerId);
   marker.style.left = x + '%';
   marker.style.top = y + '%';
+  document.getElementById(imgId).style.objectPosition = x + '% ' + y + '%';
 }
 function showFocalPicker(imgId, pickerId, hintId, url, x, y, markerId) {
   const picker = document.getElementById(pickerId);
@@ -1053,7 +1054,7 @@ function showFocalPicker(imgId, pickerId, hintId, url, x, y, markerId) {
   document.getElementById(imgId).src = url;
   picker.classList.add('show');
   hint.style.display = 'block';
-  positionFocalMarker(markerId, x, y);
+  positionFocalMarker(imgId, markerId, x, y);
 }
 
 /* ── STORAGE (Supabase-backed) ──────────────────────────── */
@@ -2309,7 +2310,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Editor: featured image focal point picker
-  setupFocalPicker('imgFocalPicker','imgFocalMarker','eFocalX','eFocalY');
+  setupFocalPicker('imgFocalPicker','imgFocalImg','imgFocalMarker','eFocalX','eFocalY');
 
   // Editor: auto-calc read time
   document.getElementById('btnCalcRead').addEventListener('click',()=>{
@@ -2475,7 +2476,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Press feature editor: focal point picker
-  setupFocalPicker('prFocalPicker','prFocalMarker','prFocalX','prFocalY');
+  setupFocalPicker('prFocalPicker','prFocalImg','prFocalMarker','prFocalX','prFocalY');
 
   // Leads: export CSV
   document.getElementById('btnExportLeads').addEventListener('click', async ()=>{
