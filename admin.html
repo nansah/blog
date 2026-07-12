@@ -310,6 +310,7 @@
       <button class="sb-link" data-nav="instagramEditor"><i class="fas fa-plus-circle"></i> New Photo</button>
       <button class="sb-link" data-nav="brands"><i class="fas fa-handshake"></i> Brand Partners</button>
       <button class="sb-link" data-nav="portfolio"><i class="fas fa-images"></i> Past Collaborations</button>
+      <button class="sb-link" data-nav="press"><i class="fas fa-newspaper"></i> Press Features</button>
       <a href="/" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
     </nav>
     <div class="sb-bottom">
@@ -844,6 +845,89 @@
       </div>
     </div>
 
+    <!-- ── PRESS FEATURES LIST ── -->
+    <div id="panelPress" class="panel hidden">
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title">Press Features</span>
+          <div class="table-filters">
+            <select class="f-select" id="fPressStatus"><option value="">All Statuses</option><option value="published">Published</option><option value="draft">Draft</option></select>
+            <button class="btn btn-gold btn-sm" data-nav="pressEditor"><i class="fas fa-plus"></i> New Feature</button>
+          </div>
+        </div>
+        <div id="pressTableBody"></div>
+      </div>
+    </div>
+
+    <!-- ── PRESS FEATURE EDITOR ── -->
+    <div id="panelPressEditor" class="panel hidden">
+      <div class="editor-wrap">
+
+        <div class="editor-left">
+          <div class="e-card e-card-pad" style="display:flex; flex-direction:column; gap:16px;">
+            <div class="meta-field">
+              <span class="meta-lbl">Outlet</span>
+              <input class="meta-in" id="prOutlet" placeholder="e.g. Essence, Marie Claire" />
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Headline</span>
+              <input class="meta-in" id="prHeadline" placeholder="Article title" />
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Article URL</span>
+              <input class="meta-in" id="prUrl" placeholder="https://…" />
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Thumbnail URL</span>
+              <input class="meta-in" id="prImgUrl" placeholder="https://…" />
+            </div>
+            <div class="meta-field">
+              <span class="meta-lbl">Or upload</span>
+              <input type="file" id="prImgFile" accept="image/*" class="file-input" />
+            </div>
+            <img id="prImgPrev" class="feat-prev" src="" alt="" />
+            <div class="meta-field">
+              <span class="meta-lbl">Badge</span>
+              <select class="meta-sel" id="prBadge">
+                <option value="Digital">Digital</option>
+                <option value="Print">Print</option>
+                <option value="Print + Digital">Print + Digital</option>
+                <option value="Podcast">Podcast</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="meta-sb">
+          <div class="meta-card">
+            <div class="meta-head">Publish</div>
+            <div class="meta-body">
+              <div class="status-ind"><div class="s-dot draft" id="prDot"></div><span id="prLabel">Draft</span></div>
+              <div class="meta-field">
+                <span class="meta-lbl">Status</span>
+                <select class="meta-sel" id="prStatus"><option value="draft">Draft</option><option value="published">Published</option></select>
+              </div>
+              <div class="pub-btns">
+                <button class="pb primary" id="btnPrPublish">Publish</button>
+                <button class="pb draft" id="btnPrDraft">Save Draft</button>
+              </div>
+              <button class="btn btn-danger btn-sm hidden" id="btnPrDelete" style="width:100%;justify-content:center;margin-top:4px;">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+
+          <div class="meta-card">
+            <div class="meta-head">Sort Order</div>
+            <div class="meta-body">
+              <input class="meta-in" id="prSort" type="number" value="0" placeholder="0" />
+              <span style="font-size:11px;color:var(--muted);">Lower numbers show first.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -1153,6 +1237,47 @@ const PortfolioDB = {
   },
 };
 
+/* ── PRESS FEATURES (press page) ────────────────────────── */
+function normalizePressFeature(row) {
+  if (!row) return null;
+  return { ...row, imageUrl: row.image_url, sortOrder: row.sort_order, createdAt: row.created_at, updatedAt: row.updated_at };
+}
+function denormalizePressFeature(data) {
+  const { imageUrl, sortOrder, createdAt, updatedAt, ...rest } = data;
+  const out = { ...rest };
+  if (imageUrl  !== undefined) out.image_url  = imageUrl;
+  if (sortOrder !== undefined) out.sort_order = sortOrder;
+  return out;
+}
+
+const PressDB = {
+  async getFeatures() {
+    const { data, error } = await supabaseClient.from('press_features').select('*').order('sort_order', { ascending: true });
+    if (error) { toast('Could not load press features: ' + error.message, 'error'); return []; }
+    return data.map(normalizePressFeature);
+  },
+  async getFeature(id) {
+    const { data, error } = await supabaseClient.from('press_features').select('*').eq('id', id).maybeSingle();
+    if (error) return null;
+    return normalizePressFeature(data);
+  },
+  async createFeature(data) {
+    const row = { id: uid(), ...denormalizePressFeature(data) };
+    const { data: inserted, error } = await supabaseClient.from('press_features').insert(row).select().single();
+    if (error) { toast('Could not save: ' + error.message, 'error'); return null; }
+    return normalizePressFeature(inserted);
+  },
+  async updateFeature(id, data) {
+    const { data: updated, error } = await supabaseClient.from('press_features').update(denormalizePressFeature(data)).eq('id', id).select().single();
+    if (error) { toast('Could not save: ' + error.message, 'error'); return null; }
+    return normalizePressFeature(updated);
+  },
+  async deleteFeature(id) {
+    const { error } = await supabaseClient.from('press_features').delete().eq('id', id);
+    if (error) toast('Could not delete: ' + error.message, 'error');
+  },
+};
+
 /* ── AUTH (Supabase) ────────────────────────────────────── */
 const Auth = {
   async isLoggedIn() {
@@ -1180,6 +1305,7 @@ let confirmCb  = null;
 let editingFaveId = null;
 let editingIgId = null;
 let editingPfId = null;
+let editingPrId = null;
 
 /* ── NAVIGATION ─────────────────────────────────────────── */
 async function nav(view, id=null) {
@@ -1188,13 +1314,14 @@ async function nav(view, id=null) {
   if (view === 'faveEditor')     editingFaveId = id;
   if (view === 'instagramEditor') editingIgId = id;
   if (view === 'portfolioEditor') editingPfId = id;
+  if (view === 'pressEditor')    editingPrId = id;
   document.querySelectorAll('.panel').forEach(p=>p.classList.add('hidden'));
   document.querySelectorAll('.sb-link[data-nav]').forEach(l=>l.classList.remove('active'));
   const panel = document.getElementById('panel'+view[0].toUpperCase()+view.slice(1));
   if (panel) panel.classList.remove('hidden');
   const link = document.querySelector(`.sb-link[data-nav="${view}"]`);
   if (link) link.classList.add('active');
-  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',instagram:'Instagram Feed',instagramEditor:id?'Edit Photo':'New Photo',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration'};
+  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',instagram:'Instagram Feed',instagramEditor:id?'Edit Photo':'New Photo',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration',press:'Press Features',pressEditor:id?'Edit Feature':'New Feature'};
   document.getElementById('topbarLabel').innerHTML = `<strong>${labels[view]||view}</strong>`;
   if (view==='dashboard')        await renderDashboard();
   if (view==='posts')            await renderPostsTable();
@@ -1209,6 +1336,8 @@ async function nav(view, id=null) {
   if (view==='brands')           await renderBrandsPanel();
   if (view==='portfolio')        await renderPortfolioTable();
   if (view==='portfolioEditor')  await initPortfolioEditor(id);
+  if (view==='press')            await renderPressTable();
+  if (view==='pressEditor')      await initPressEditor(id);
 }
 
 /* ── DASHBOARD ──────────────────────────────────────────── */
@@ -1639,6 +1768,104 @@ function confirmDelPortfolio(pfId) {
   });
 }
 
+/* ── PRESS FEATURES TABLE ───────────────────────────────── */
+async function renderPressTable() {
+  const st = document.getElementById('fPressStatus')?.value||'';
+  let features = await PressDB.getFeatures();
+  if (st) features = features.filter(p=>p.status===st);
+  document.getElementById('pressTableBody').innerHTML = pressRows(features);
+}
+
+function pressRows(features) {
+  if (!features.length) return `<div class="empty-state"><i class="fas fa-newspaper"></i>No press features yet. <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="nav('pressEditor')">Add your first one</button></div>`;
+  return `<table><thead><tr><th style="width:70px;">Photo</th><th>Outlet</th><th>Headline</th><th>Status</th><th style="width:100px;">Actions</th></tr></thead><tbody>
+    ${features.map(p=>`<tr>
+      <td><img src="${esc(p.imageUrl||'')}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;" /></td>
+      <td class="t-title">${esc(p.outlet||'')}</td>
+      <td>${esc(p.headline||'Untitled')}</td>
+      <td><span class="badge b-${p.status||'draft'}">${p.status||'draft'}</span></td>
+      <td><div class="action-btns">
+        <button class="btn-icon" onclick="nav('pressEditor','${p.id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+        ${p.url ? `<a class="btn-icon" href="${esc(p.url)}" target="_blank" title="Open Article"><i class="fas fa-up-right-from-square"></i></a>` : ''}
+        <button class="btn-icon del" onclick="confirmDelPress('${p.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+/* ── PRESS FEATURE EDITOR ───────────────────────────────── */
+async function initPressEditor(prId) {
+  document.getElementById('prOutlet').value   = '';
+  document.getElementById('prHeadline').value = '';
+  document.getElementById('prUrl').value      = '';
+  document.getElementById('prImgUrl').value   = '';
+  document.getElementById('prImgFile').value  = '';
+  document.getElementById('prBadge').value    = 'Digital';
+  document.getElementById('prSort').value     = 0;
+  document.getElementById('prStatus').value   = 'draft';
+  document.getElementById('prImgPrev').className = 'feat-prev';
+  document.getElementById('btnPrDelete').classList.add('hidden');
+  setPrStatusUI('draft');
+
+  if (prId) {
+    const p = await PressDB.getFeature(prId);
+    if (p) {
+      document.getElementById('prOutlet').value   = p.outlet||'';
+      document.getElementById('prHeadline').value = p.headline||'';
+      document.getElementById('prUrl').value      = p.url||'';
+      document.getElementById('prImgUrl').value   = p.imageUrl||'';
+      document.getElementById('prBadge').value    = p.badge||'Digital';
+      document.getElementById('prSort').value     = p.sortOrder||0;
+      document.getElementById('prStatus').value   = p.status||'draft';
+      if (p.imageUrl) { const prev = document.getElementById('prImgPrev'); prev.src = p.imageUrl; prev.className = 'feat-prev show'; }
+      setPrStatusUI(p.status||'draft');
+      document.getElementById('btnPrDelete').classList.remove('hidden');
+    }
+  }
+}
+
+function setPrStatusUI(status) {
+  document.getElementById('prDot').className    = `s-dot ${status}`;
+  document.getElementById('prLabel').textContent = status==='published'?'Published':'Draft';
+}
+
+function collectPrEditorData(status) {
+  return {
+    outlet:    document.getElementById('prOutlet').value.trim(),
+    headline:  document.getElementById('prHeadline').value.trim(),
+    url:       document.getElementById('prUrl').value.trim(),
+    imageUrl:  document.getElementById('prImgUrl').value.trim(),
+    badge:     document.getElementById('prBadge').value,
+    sortOrder: parseInt(document.getElementById('prSort').value, 10) || 0,
+    status,
+  };
+}
+
+async function savePrFeature(status) {
+  const data = collectPrEditorData(status);
+  if (!data.outlet || !data.headline) { toast('Add an outlet and headline before saving.','warning'); return; }
+  if (editingPrId) {
+    await PressDB.updateFeature(editingPrId, data);
+    toast(`Feature ${status==='published'?'published':'saved'}!`, 'success');
+  } else {
+    const p = await PressDB.createFeature(data);
+    if (p) editingPrId = p.id;
+    toast(`Feature ${status==='published'?'published':'saved as draft'}!`, 'success');
+  }
+  document.getElementById('btnPrDelete').classList.remove('hidden');
+  setPrStatusUI(status);
+  document.getElementById('prStatus').value = status;
+}
+
+function confirmDelPress(prId) {
+  openModal('Delete this press feature?','This will permanently remove it from the Press page.', async ()=>{
+    await PressDB.deleteFeature(prId);
+    toast('Deleted.','success');
+    if (curView==='pressEditor') await nav('press');
+    else await renderPressTable();
+  });
+}
+
 /* ── EDITOR ─────────────────────────────────────────────── */
 async function initEditor(postId) {
   // Reset fields
@@ -2046,6 +2273,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const fPortfolioStatus = document.getElementById('fPortfolioStatus');
   if (fPortfolioStatus) fPortfolioStatus.addEventListener('input', renderPortfolioTable);
 
+  // Press features table: filters
+  const fPressStatus = document.getElementById('fPressStatus');
+  if (fPressStatus) fPressStatus.addEventListener('input', renderPressTable);
+
   // Instagram photo editor: status change
   document.getElementById('igStatus').addEventListener('change',e=>setIgStatusUI(e.target.value));
 
@@ -2112,6 +2343,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!url) return;
     document.getElementById('pfImgUrl').value = url;
     const prev = document.getElementById('pfImgPrev');
+    prev.src = url;
+    prev.className = 'feat-prev show';
+  });
+
+  // Press feature editor: status change
+  document.getElementById('prStatus').addEventListener('change',e=>setPrStatusUI(e.target.value));
+
+  // Press feature editor: publish/draft buttons
+  document.getElementById('btnPrPublish').addEventListener('click',()=>savePrFeature('published'));
+  document.getElementById('btnPrDraft').addEventListener('click',()=>savePrFeature('draft'));
+
+  // Press feature editor: delete
+  document.getElementById('btnPrDelete').addEventListener('click',()=>{ if(editingPrId) confirmDelPress(editingPrId); });
+
+  // Press feature editor: image URL preview
+  document.getElementById('prImgUrl').addEventListener('input',e=>{
+    const prev = document.getElementById('prImgPrev');
+    if (e.target.value) { prev.src=e.target.value; prev.className='feat-prev show'; }
+    else prev.className='feat-prev';
+  });
+
+  // Press feature editor: image file upload
+  document.getElementById('prImgFile').addEventListener('change', async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    toast('Uploading image…','success');
+    const url = await uploadImageFile(file);
+    if (!url) return;
+    document.getElementById('prImgUrl').value = url;
+    const prev = document.getElementById('prImgPrev');
     prev.src = url;
     prev.className = 'feat-prev show';
   });

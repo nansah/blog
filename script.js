@@ -445,3 +445,53 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     else el.classList.add('in-view');
   });
 })();
+
+// ── Live press features (Press page, editable in admin) ───────────────────
+(async function renderPressFeatures() {
+  const asSeenGrid = document.getElementById('asSeenGrid');
+  const featuresGrid = document.getElementById('pressFeaturesGrid');
+  if ((!asSeenGrid && !featuresGrid) || typeof supabaseClient === 'undefined') return;
+
+  const { data, error } = await supabaseClient
+    .from('press_features')
+    .select('*')
+    .eq('status', 'published')
+    .order('sort_order', { ascending: true });
+
+  if (error || !data || !data.length) return; // keep the placeholder features
+
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  if (asSeenGrid) {
+    const outlets = [...new Set(data.map(p => p.outlet).filter(Boolean))];
+    asSeenGrid.innerHTML = outlets.map(o => `
+      <div class="as-seen-item reveal">
+        <i class="fas fa-newspaper"></i>
+        <span>${esc(o)}</span>
+      </div>
+    `).join('');
+    asSeenGrid.querySelectorAll('.reveal').forEach(el => {
+      if (typeof revealObserver !== 'undefined') revealObserver.observe(el);
+      else el.classList.add('in-view');
+    });
+  }
+
+  if (featuresGrid) {
+    featuresGrid.innerHTML = data.map(p => `
+      <div class="press-feature-card reveal">
+        <div class="press-feature-img">
+          <img src="${esc(p.image_url || 'https://picsum.photos/seed/' + esc(p.id) + '/800/450')}" alt="${esc(p.outlet)} feature" />
+          <span class="press-feature-badge">${esc(p.badge || 'Digital')}</span>
+        </div>
+        <div class="press-feature-body">
+          <p class="press-feature-outlet">${esc(p.outlet)}</p>
+          <h3>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">"${esc(p.headline)}"</a>` : `"${esc(p.headline)}"`}</h3>
+        </div>
+      </div>
+    `).join('');
+    featuresGrid.querySelectorAll('.reveal').forEach(el => {
+      if (typeof revealObserver !== 'undefined') revealObserver.observe(el);
+      else el.classList.add('in-view');
+    });
+  }
+})();
