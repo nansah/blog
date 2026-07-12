@@ -351,9 +351,11 @@
       document.getElementById('twDesc').content = desc;
       document.getElementById('twImage').content = image;
 
+      const focalPos = `${post.focal_x ?? 50}% ${post.focal_y ?? 50}%`;
+
       const heroHTML = post.image
         ? `<div class="post-hero">
-             <img src="${esc(post.image)}" alt="${esc(post.title)}" loading="eager" />
+             <img src="${esc(post.image)}" alt="${esc(post.title)}" loading="eager" style="object-position: ${focalPos};" />
              <div class="post-hero-overlay">
                <div class="post-hero-inner">
                  ${post.category?`<span class="section-tag">${esc(post.category)}</span>`:''}
@@ -391,6 +393,7 @@
         const blocks = Array.from(wrap.children);
         const img = document.createElement('img');
         img.src = post.image; img.alt = post.title; img.loading = 'lazy';
+        img.style.objectPosition = focalPos;
         if (!blocks.length) { wrap.appendChild(img); return wrap.innerHTML; }
         const mid = Math.floor(blocks.length / 2);
         wrap.insertBefore(img, blocks[mid] || null);

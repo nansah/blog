@@ -268,7 +268,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       <a href="/post/${esc(post.slug || post.id)}" class="post-card-link" style="display:block;text-decoration:none;color:inherit;">
         <div class="post-img-wrap">
           ${post.image
-            ? `<img src="${esc(post.image)}" alt="${esc(post.title)}" loading="lazy" />`
+            ? `<img src="${esc(post.image)}" alt="${esc(post.title)}" loading="lazy" style="object-position: ${post.focal_x ?? 50}% ${post.focal_y ?? 50}%;" />`
             : `<div style="width:100%;padding-top:68%;background:linear-gradient(135deg,#2b241c,#1c1712);position:relative;"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:22px;color:#a9603f;opacity:.5;">✦</span></div>`
           }
         </div>
@@ -480,7 +480,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     featuresGrid.innerHTML = data.map(p => `
       <div class="press-feature-card reveal">
         <div class="press-feature-img">
-          <img src="${esc(p.image_url || 'https://picsum.photos/seed/' + esc(p.id) + '/800/450')}" alt="${esc(p.outlet)} feature" />
+          <img src="${esc(p.image_url || 'https://picsum.photos/seed/' + esc(p.id) + '/800/450')}" alt="${esc(p.outlet)} feature" style="object-position: ${p.focal_x ?? 50}% ${p.focal_y ?? 50}%;" />
           <span class="press-feature-badge">${esc(p.badge || 'Digital')}</span>
         </div>
         <div class="press-feature-body">
