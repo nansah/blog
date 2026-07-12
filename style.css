@@ -477,7 +477,7 @@ body.search-open {
   cursor: pointer; border: 1.5px solid currentColor;
   background: var(--white);
   position: relative;
-  box-shadow: 6px 6px 0 0 #b7410e;
+  box-shadow: 6px 6px 0 0 currentColor;
   transition: color var(--transition), background var(--transition), box-shadow var(--transition), transform var(--transition);
   white-space: nowrap;
 }
@@ -486,7 +486,7 @@ body.search-open {
   transform: translate(4px, 4px);
 }
 
-.btn-gold    { color: var(--gold); }
+.btn-gold    { color: var(--gold); box-shadow: 6px 6px 0 0 #b7410e; }
 .btn-gold:hover { background: var(--gold); color: var(--white); }
 .btn-dark    { color: var(--black); }
 .btn-dark:hover { background: var(--black); color: var(--white); }
