@@ -2129,6 +2129,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (url) { document.execCommand('insertImage',false,url); }
   });
 
+  // Editor body: drag & drop an image file straight into the content
+  const eContent = document.getElementById('eContent');
+  eContent.addEventListener('dragover', e => { e.preventDefault(); });
+  eContent.addEventListener('drop', async e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+
+    // Move the caret to the drop point so the image lands where it was dropped.
+    let range = null;
+    if (document.caretRangeFromPoint) {
+      range = document.caretRangeFromPoint(e.clientX, e.clientY);
+    } else if (document.caretPositionFromPoint) {
+      const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+      if (pos) { range = document.createRange(); range.setStart(pos.offsetNode, pos.offset); }
+    }
+    if (range) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    eContent.focus();
+    toast('Uploading image…','success');
+    const url = await uploadImageFile(file);
+    if (!url) return;
+    document.execCommand('insertImage', false, url);
+  });
+
   // Toolbar: HR
   document.getElementById('tbHR').addEventListener('mousedown',e=>{
     e.preventDefault();
