@@ -409,35 +409,6 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 })();
 
-// ── Live Instagram feed grid (homepage, editable in admin) ────────────────
-(async function renderInstagramFeed() {
-  const grid = document.getElementById('igFeedGrid');
-  if (!grid || typeof supabaseClient === 'undefined') return;
-
-  const { data, error } = await supabaseClient
-    .from('instagram_photos')
-    .select('*')
-    .eq('status', 'published')
-    .order('sort_order', { ascending: true })
-    .limit(8);
-
-  if (error || !data || !data.length) return; // keep the placeholder photos
-
-  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
-  grid.innerHTML = data.map(p => `
-    <a href="${esc(p.post_url || '#')}" class="ig-item reveal" target="_blank" rel="noopener">
-      <img src="${esc(p.image_url)}" alt="${esc(p.caption || 'Instagram post')}" loading="lazy" />
-      <div class="ig-overlay"><i class="fab fa-instagram"></i></div>
-    </a>
-  `).join('');
-
-  grid.querySelectorAll('.reveal').forEach(el => {
-    if (typeof revealObserver !== 'undefined') revealObserver.observe(el);
-    else el.classList.add('in-view');
-  });
-})();
-
 // ── Live "past collaborations" brand list (editable in admin) ─────────────
 (async function renderBrands() {
   const grid = document.getElementById('brandsGrid');
