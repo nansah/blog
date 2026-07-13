@@ -74,10 +74,15 @@
     .post-hero-meta span { display: flex; align-items: center; gap: 6px; }
 
     .article-wrap {
-      max-width: 720px;
+      max-width: 1080px;
       margin: 0 auto;
       padding: 52px 20px 72px;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 56px;
+      align-items: start;
     }
+    .article-main { min-width: 0; }
     .article-body {
       font-size: 17px;
       line-height: 1.82;
@@ -143,27 +148,41 @@
     .post-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 36px; padding-top: 24px; border-top: 1px solid #e9e0d3; }
     .post-tag { padding: 4px 10px; border-radius: 20px; background: #f3ece2; color: #555; font-size: 11px; font-weight: 500; }
 
-    .author-bio {
-      margin-top: 48px;
-      padding: 28px 28px 28px 0;
-      border-top: 2px solid #e9e0d3;
-      display: flex; gap: 20px; align-items: flex-start;
+    /* ── SIDEBAR ───────────────────────────────────────────────────────────── */
+    .post-sidebar { display: flex; flex-direction: column; gap: 24px; }
+    .sidebar-block {
+      background: #faf5ee; border: 1px solid #e9e0d3; border-radius: 10px;
+      padding: 24px 20px; text-align: center;
     }
-    .author-avatar {
-      width: 64px; height: 64px; border-radius: 50%;
-      object-fit: cover; flex-shrink: 0;
-      background: #a9603f;
+    .sidebar-block h4 {
+      font-family: 'Lora', Georgia, serif; font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em; color: #1c1712;
+      margin-bottom: 14px;
     }
-    .author-avatar-placeholder {
-      width: 64px; height: 64px; border-radius: 50%;
-      background: linear-gradient(135deg,#a9603f,#7a4530);
+    .sidebar-profile img {
+      width: 84px; height: 84px; border-radius: 50%; object-fit: cover;
+      margin: 0 auto 14px; display: block;
+    }
+    .sidebar-profile h3 { font-family: 'Lora', Georgia, serif; font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #1c1712; }
+    .sidebar-profile p { font-size: 13px; color: #7a6f63; line-height: 1.6; margin-bottom: 14px; }
+    .sidebar-profile a { font-size: 12px; color: #a9603f; font-weight: 600; text-decoration: none; }
+    .sidebar-profile a:hover { text-decoration: underline; }
+    .sidebar-categories ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-categories a { font-size: 13px; color: #3a3129; font-weight: 500; }
+    .sidebar-categories a:hover { color: #a9603f; }
+    .sidebar-faves p { font-size: 13px; color: #7a6f63; margin-bottom: 14px; line-height: 1.6; }
+    .sidebar-btn {
+      display: inline-block; padding: 10px 22px; background: #a9603f; color: #fff;
+      font-size: 12px; font-weight: 600; border-radius: 4px; text-decoration: none;
+    }
+    .sidebar-btn:hover { background: #8a4a2f; }
+    .sidebar-social-icons { display: flex; justify-content: center; gap: 10px; }
+    .sidebar-social-icons a {
+      width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e9e0d3;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Lora', Georgia, serif;
-      font-size: 22px; color: #fff; font-weight: 600;
-      flex-shrink: 0;
+      color: #3a3129; font-size: 14px;
     }
-    .author-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
-    .author-desc { font-size: 13px; color: #7a6f63; line-height: 1.65; }
+    .sidebar-social-icons a:hover { background: #a9603f; color: #fff; border-color: #a9603f; }
 
     .post-nav {
       max-width: 720px; margin: 0 auto;
@@ -193,11 +212,15 @@
       pointer-events: none;
     }
 
+    @media (max-width: 860px) {
+      .article-wrap { grid-template-columns: 1fr; }
+      .post-sidebar { order: 3; }
+    }
+
     @media (max-width: 640px) {
       .post-hero { aspect-ratio: 4/3; }
       .post-hero-inner { padding: 24px 18px; }
       .article-wrap { padding: 32px 16px 52px; }
-      .author-bio { flex-direction: column; }
     }
   </style>
 </head>
@@ -408,27 +431,24 @@
       root.innerHTML = `
         ${heroHTML}
         <div class="article-wrap">
-          ${!post.image ? '' : `<div class="post-meta-bar">
-            ${post.category?`<a href="${getCatHref(post.category)}" style="color:inherit;"><span class="badge">${esc(post.category)}</span></a>`:''}
-            <span><i class="fas fa-calendar-alt"></i> ${fmtDate(post.publishedAt||post.createdAt)}</span>
-            ${post.readTime?`<span><i class="fas fa-clock"></i> ${esc(post.readTime)}</span>`:''}
-            <span><i class="fas fa-user"></i> Nana Yaa Ansah</span>
-          </div>`}
-          <div class="article-body" id="articleBody">${articleHTML}</div>
-          ${tags.length?`<div class="post-tags">${tags.map(t=>`<span class="post-tag">#${esc(t)}</span>`).join('')}</div>`:''}
-          <div class="author-bio">
-            <div class="author-avatar-placeholder">N</div>
-            <div>
-              <div class="author-name">Nana Yaa Ansah</div>
-              <div class="author-desc">NYC-based lifestyle editor and content creator. Writing about the city, style, food, and the beautiful chaos of living boldly in New York. <a href="/about" style="color:#a9603f;">Read more about Nana Yaa →</a></div>
-            </div>
+          <div class="article-main">
+            ${!post.image ? '' : `<div class="post-meta-bar">
+              ${post.category?`<a href="${getCatHref(post.category)}" style="color:inherit;"><span class="badge">${esc(post.category)}</span></a>`:''}
+              <span><i class="fas fa-calendar-alt"></i> ${fmtDate(post.publishedAt||post.createdAt)}</span>
+              ${post.readTime?`<span><i class="fas fa-clock"></i> ${esc(post.readTime)}</span>`:''}
+              <span><i class="fas fa-user"></i> Nana Yaa Ansah</span>
+            </div>`}
+            <div class="article-body" id="articleBody">${articleHTML}</div>
+            ${tags.length?`<div class="post-tags">${tags.map(t=>`<span class="post-tag">#${esc(t)}</span>`).join('')}</div>`:''}
           </div>
+          <aside class="post-sidebar" id="postSidebar"></aside>
         </div>
         <nav class="post-nav">
           <a href="${post.category?getCatHref(post.category):'/'}"><i class="fas fa-arrow-left"></i> Back to ${post.category||'All Posts'}</a>
-          <a href="/admin?edit=${post.id}" style="opacity:.5;font-size:11px;"><i class="fas fa-pencil-alt"></i> Edit in Admin</a>
         </nav>
       `;
+
+      renderPostSidebar();
     }
 
     function renderNotFound() {
@@ -439,6 +459,82 @@
           <p>This post doesn't exist or may have been removed. Try browsing from the homepage.</p>
           <a href="/" class="btn btn-gold" style="margin-top:8px;">Back to Home</a>
         </div>`;
+    }
+
+    // Sidebar block order (profile / categories / faves / social) is
+    // editable in admin via drag-and-drop, so it's fetched fresh on every
+    // page load rather than hardcoded.
+    async function renderPostSidebar() {
+      const container = document.getElementById('postSidebar');
+      if (!container || typeof supabaseClient === 'undefined') return;
+
+      let order = ['profile', 'categories', 'faves', 'social'];
+      try {
+        const { data } = await supabaseClient.from('sidebar_blocks').select('*').order('sort_order', { ascending: true });
+        if (data && data.length) order = data.map(b => b.id);
+      } catch {}
+
+      const socialLinks = {};
+      try {
+        const { data } = await supabaseClient.from('social_links').select('*');
+        if (data) data.forEach(l => { socialLinks[l.id] = l; });
+      } catch {}
+
+      const normalizeUrl = url => {
+        if (!url || url === '#') return '';
+        return /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`;
+      };
+
+      const blockHTML = {
+        profile: () => `
+          <div class="sidebar-block sidebar-profile">
+            <img src="/images/hero-nana-yaa.jpg" alt="Nana Yaa Ansah" />
+            <h3>Nana Yaa Ansah</h3>
+            <p>NYC-based lifestyle creator writing about style, faith, and city life.</p>
+            <a href="/about">Read My Story &rarr;</a>
+          </div>
+        `,
+        categories: () => `
+          <div class="sidebar-block sidebar-categories">
+            <h4>Categories</h4>
+            <ul>
+              <li><a href="/lifestyle">Lifestyle</a></li>
+              <li><a href="/fashion">Fashion</a></li>
+              <li><a href="/faith">Faith</a></li>
+              <li><a href="/beauty">Beauty</a></li>
+            </ul>
+          </div>
+        `,
+        faves: () => `
+          <div class="sidebar-block sidebar-faves">
+            <h4>Shop My Faves</h4>
+            <p>My go-to products and picks, all in one place.</p>
+            <a href="/faves" class="sidebar-btn">Shop Now</a>
+          </div>
+        `,
+        social: () => {
+          const icons = [
+            { id: 'instagram', label: 'Instagram', icon: 'fab fa-instagram' },
+            { id: 'tiktok',    label: 'TikTok',    icon: 'fab fa-tiktok' },
+            { id: 'youtube',   label: 'YouTube',   icon: 'fab fa-youtube' },
+            { id: 'pinterest', label: 'Pinterest', icon: 'fab fa-pinterest' },
+          ];
+          const links = icons.map(p => {
+            const url = normalizeUrl(socialLinks[p.id]?.url);
+            if (!url) return '';
+            return `<a href="${url}" target="_blank" rel="noopener" aria-label="${p.label}"><i class="${p.icon}"></i></a>`;
+          }).join('');
+          if (!links) return '';
+          return `
+            <div class="sidebar-block sidebar-social">
+              <h4>Follow Along</h4>
+              <div class="sidebar-social-icons">${links}</div>
+            </div>
+          `;
+        },
+      };
+
+      container.innerHTML = order.map(id => (blockHTML[id] ? blockHTML[id]() : '')).join('');
     }
 
     // Read progress bar

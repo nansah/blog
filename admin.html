@@ -240,6 +240,20 @@
     .s-in { padding: 9px 11px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; color: var(--black); background: var(--white); outline: none; width: 100%; transition: border-color .18s; }
     .s-in:focus { border-color: var(--gold); }
 
+    /* ── DRAGGABLE SIDEBAR BLOCK LIST ── */
+    .drag-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; background: var(--white);
+      border: 1px solid var(--border); border-radius: 9px;
+      cursor: grab; user-select: none;
+      transition: box-shadow .15s, border-color .15s, opacity .15s;
+    }
+    .drag-item:active { cursor: grabbing; }
+    .drag-item.dragging { opacity: 0.4; }
+    .drag-item.drag-over { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(169,96,63,.15); }
+    .drag-item i.fa-grip-vertical { color: var(--muted); font-size: 13px; }
+    .drag-item-label { font-size: 13px; font-weight: 600; color: var(--black); }
+
     /* ── TOAST ── */
     .toast-wrap { position: fixed; bottom: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column; gap: 7px; }
     .toast { background: var(--black); color: #fff; padding: 11px 16px; border-radius: 8px; font-size: 13px; display: flex; align-items: center; gap: 9px; box-shadow: var(--shm); transform: translateX(130%); transition: transform .3s var(--ease); min-width: 200px; max-width: 320px; }
@@ -320,6 +334,7 @@
       <button class="sb-link" data-nav="brands"><i class="fas fa-handshake"></i> Brand Partners</button>
       <button class="sb-link" data-nav="portfolio"><i class="fas fa-images"></i> Past Collaborations</button>
       <button class="sb-link" data-nav="press"><i class="fas fa-newspaper"></i> Press Features</button>
+      <button class="sb-link" data-nav="sidebar"><i class="fas fa-grip-lines"></i> Post Sidebar</button>
       <a href="/" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
     </nav>
     <div class="sb-bottom">
@@ -880,6 +895,19 @@
       </div>
     </div>
 
+    <!-- ── POST SIDEBAR ORDER ── -->
+    <div id="panelSidebar" class="panel hidden">
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title">Post Sidebar</span>
+        </div>
+        <div style="padding:20px;">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Drag to reorder how these blocks appear in the sidebar on every blog post page.</p>
+          <div id="sidebarBlockList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -1219,6 +1247,24 @@ const PressDB = {
   },
 };
 
+/* ── POST SIDEBAR ORDER (post pages) ────────────────────── */
+const SidebarDB = {
+  async getBlocks() {
+    const { data, error } = await supabaseClient.from('sidebar_blocks').select('*').order('sort_order', { ascending: true });
+    if (error) { toast('Could not load sidebar order: ' + error.message, 'error'); return []; }
+    return data;
+  },
+  async setOrder(orderedIds) {
+    const updates = orderedIds.map((id, i) =>
+      supabaseClient.from('sidebar_blocks').update({ sort_order: (i + 1) * 10 }).eq('id', id)
+    );
+    const results = await Promise.all(updates);
+    const error = results.find(r => r.error)?.error;
+    if (error) { toast('Could not save order: ' + error.message, 'error'); return false; }
+    return true;
+  },
+};
+
 /* ── AUTH (Supabase) ────────────────────────────────────── */
 const Auth = {
   async isLoggedIn() {
@@ -1261,7 +1307,7 @@ async function nav(view, id=null) {
   if (panel) panel.classList.remove('hidden');
   const link = document.querySelector(`.sb-link[data-nav="${view}"]`);
   if (link) link.classList.add('active');
-  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration',press:'Press Features',pressEditor:id?'Edit Feature':'New Feature'};
+  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration',press:'Press Features',pressEditor:id?'Edit Feature':'New Feature',sidebar:'Post Sidebar'};
   document.getElementById('topbarLabel').innerHTML = `<strong>${labels[view]||view}</strong>`;
   if (view==='dashboard')        await renderDashboard();
   if (view==='posts')            await renderPostsTable();
@@ -1276,6 +1322,7 @@ async function nav(view, id=null) {
   if (view==='portfolioEditor')  await initPortfolioEditor(id);
   if (view==='press')            await renderPressTable();
   if (view==='pressEditor')      await initPressEditor(id);
+  if (view==='sidebar')          await renderSidebarPanel();
 }
 
 /* ── DASHBOARD ──────────────────────────────────────────── */
@@ -1719,6 +1766,62 @@ function confirmDelPress(prId) {
     toast('Deleted.','success');
     if (curView==='pressEditor') await nav('press');
     else await renderPressTable();
+  });
+}
+
+/* ── POST SIDEBAR ORDER ─────────────────────────────────── */
+let sidebarBlockOrder = [];
+let dragSrcId = null;
+
+async function renderSidebarPanel() {
+  const blocks = await SidebarDB.getBlocks();
+  sidebarBlockOrder = blocks.map(b => b.id);
+  renderSidebarBlockList(blocks);
+}
+
+function renderSidebarBlockList(blocks) {
+  const list = document.getElementById('sidebarBlockList');
+  list.innerHTML = blocks.map(b => `
+    <div class="drag-item" draggable="true" data-id="${b.id}">
+      <i class="fas fa-grip-vertical"></i>
+      <span class="drag-item-label">${esc(b.label)}</span>
+    </div>
+  `).join('');
+
+  const blockMap = {};
+  blocks.forEach(b => { blockMap[b.id] = b; });
+
+  list.querySelectorAll('.drag-item').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragSrcId = item.dataset.id;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      list.querySelectorAll('.drag-item').forEach(el => el.classList.remove('drag-over'));
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (item.dataset.id !== dragSrcId) item.classList.add('drag-over');
+    });
+    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+    item.addEventListener('drop', async e => {
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      const targetId = item.dataset.id;
+      if (!dragSrcId || dragSrcId === targetId) return;
+
+      const fromIdx = sidebarBlockOrder.indexOf(dragSrcId);
+      const toIdx = sidebarBlockOrder.indexOf(targetId);
+      sidebarBlockOrder.splice(fromIdx, 1);
+      sidebarBlockOrder.splice(toIdx, 0, dragSrcId);
+
+      renderSidebarBlockList(sidebarBlockOrder.map(id => blockMap[id]));
+
+      const ok = await SidebarDB.setOrder(sidebarBlockOrder);
+      if (ok) toast('Sidebar order saved!', 'success');
+    });
   });
 }
 
