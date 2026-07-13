@@ -97,8 +97,8 @@ if (nlForm) {
     }
 
     btn.textContent = 'You\'re in! ✓';
-    btn.style.background = '#4ade80';
-    btn.style.borderColor = '#4ade80';
+    btn.style.background = '#16a34a';
+    btn.style.borderColor = '#16a34a';
     if (note) { note.textContent = 'no spam, ever. unsubscribe at any time.'; note.style.color = ''; }
     nlForm.reset();
 
