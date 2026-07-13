@@ -236,12 +236,18 @@
     <div class="newsletter-inner">
       <span class="section-tag">stay in the loop</span>
       <h2 class="newsletter-title">get the edit<br /><em>in your inbox</em></h2>
-      <p class="newsletter-sub">join 50,000+ readers who get weekly NYC guides, style drops, and exclusive content — every Sunday morning.</p>
+      <p class="newsletter-sub">join the trribe for weekly NYC guides, style drops, and exclusive content — every Sunday morning.</p>
       <form class="newsletter-form" id="newsletterForm" novalidate>
-        <input type="email" placeholder="enter your email address…" class="newsletter-input" required />
+        <input type="email" id="newsletterEmail" placeholder="enter your email address…" class="newsletter-input" required />
+        <!-- Honeypot: hidden from real visitors, but bots that fill every field trip it. -->
+        <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+          <label for="newsletterCompany">Company</label>
+          <input type="text" id="newsletterCompany" name="company" tabindex="-1" autocomplete="off" />
+        </div>
         <button type="submit" class="btn btn-gold">subscribe</button>
       </form>
-      <p class="newsletter-note"><i class="fas fa-lock"></i> no spam, ever. unsubscribe at any time.</p>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAD0gcQWVDCAJfk6Y" style="margin-top:14px;"></div>
+      <p class="newsletter-note" id="newsletterNote"><i class="fas fa-lock"></i> no spam, ever. unsubscribe at any time.</p>
     </div>
   </section>
 
@@ -339,5 +345,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="supabase-client.js"></script>
   <script src="script.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </body>
 </html>

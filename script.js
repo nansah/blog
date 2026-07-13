@@ -41,17 +41,66 @@ if (scrollTopBtn) {
 }
 
 // ── Newsletter form ────────────────────────────────────────────────────────
+const nlFormLoadedAt = Date.now();
 if (nlForm) {
-  nlForm.addEventListener('submit', (e) => {
+  nlForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn   = nlForm.querySelector('button');
-    const input = nlForm.querySelector('input');
+    const input = document.getElementById('newsletterEmail');
+    const note  = document.getElementById('newsletterNote');
+    const email = input.value.trim();
+    if (!email) return;
+
+    // Bot check: honeypot field filled, or submitted implausibly fast.
+    // Fail silently with a fake success so bots don't learn to adapt.
+    const honeypot = document.getElementById('newsletterCompany')?.value.trim();
+    const tooFast  = Date.now() - nlFormLoadedAt < 1500;
+    if (honeypot || tooFast) {
+      nlForm.reset();
+      return;
+    }
+
+    const turnstileToken = nlForm.querySelector('[name="cf-turnstile-response"]')?.value;
+    if (!turnstileToken) {
+      if (note) { note.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Please complete the verification check, then try again.'; note.style.color = '#c0392b'; }
+      return;
+    }
 
     const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Subscribing…';
+
+    let error = null;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/subscribe-newsletter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ email, turnstileToken }),
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) error = result.error || 'Subscription failed';
+    } catch {
+      error = 'Network error';
+    }
+
+    if (typeof turnstile !== 'undefined') turnstile.reset();
+    btn.disabled = false;
+
+    if (error) {
+      btn.textContent = original;
+      if (note) { note.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Something went wrong — please try again.'; note.style.color = '#c0392b'; }
+      return;
+    }
+
     btn.textContent = 'You\'re in! ✓';
     btn.style.background = '#4ade80';
     btn.style.borderColor = '#4ade80';
-    input.value = '';
+    if (note) { note.innerHTML = '<i class="fas fa-lock"></i> no spam, ever. unsubscribe at any time.'; note.style.color = ''; }
+    nlForm.reset();
 
     setTimeout(() => {
       btn.textContent = original;
