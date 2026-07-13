@@ -1779,3 +1779,13 @@ body.search-open {
   .stats-strip-grid { grid-template-columns: 1fr 1fr; }
   .as-seen-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ============================================
+   ELFSIGHT WIDGET — hide the free-plan branding badge
+   ============================================ */
+.elfsight-app-163154fa-e873-4528-8de5-aba4184f381c a[href*="elfsight.com"],
+.elfsight-app-163154fa-e873-4528-8de5-aba4184f381c .eapps-widget-toolbar,
+.elfsight-app-163154fa-e873-4528-8de5-aba4184f381c [class*="powered-by"],
+.elfsight-app-163154fa-e873-4528-8de5-aba4184f381c [class*="PoweredBy"] {
+  display: none !important;
+}
