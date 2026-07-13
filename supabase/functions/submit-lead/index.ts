@@ -32,19 +32,24 @@ const corsHeaders = {
 
 async function syncToResend(email: string, name: string | null) {
   // Best-effort: the lead is already saved in Supabase by the time this
-  // runs, so a Resend hiccup shouldn't fail the whole submission.
+  // runs, so a Resend hiccup shouldn't fail the whole submission. But we
+  // DO need to log the actual response body on failure — fetch() only
+  // throws on network errors, not on Resend rejecting the request (e.g.
+  // an unverified sending domain), so without this a rejection would fail
+  // completely silently.
   try {
-    await fetch(`https://api.resend.com/audiences/${RESEND_AUDIENCE_ID}/contacts`, {
+    const res = await fetch(`https://api.resend.com/audiences/${RESEND_AUDIENCE_ID}/contacts`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, first_name: name || undefined, unsubscribed: false }),
     });
+    if (!res.ok) console.error('Resend audience sync rejected:', res.status, await res.text());
   } catch (err) {
     console.error('Resend audience sync failed:', err);
   }
 
   try {
-    await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -63,6 +68,7 @@ async function syncToResend(email: string, name: string | null) {
         `,
       }),
     });
+    if (!res.ok) console.error('Resend email send rejected:', res.status, await res.text());
   } catch (err) {
     console.error('Resend email send failed:', err);
   }
