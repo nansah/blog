@@ -928,8 +928,9 @@ body.search-open {
 .newsletter-sub { font-size: 15px; color: var(--muted); line-height: 1.8; margin-bottom: 40px; }
 
 .newsletter-form {
-  display: flex; gap: 12px; max-width: 500px; margin: 0 auto 16px;
+  display: flex; flex-wrap: wrap; gap: 12px; max-width: 500px; margin: 0 auto 16px;
 }
+.newsletter-form .cf-turnstile { flex-basis: 100%; display: flex; justify-content: center; }
 .newsletter-input {
   flex: 1; background: var(--white); border: 1.5px solid var(--border);
   outline: none; padding: 15px 20px;
