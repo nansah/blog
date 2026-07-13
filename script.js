@@ -62,7 +62,7 @@ if (nlForm) {
 
     const turnstileToken = nlForm.querySelector('[name="cf-turnstile-response"]')?.value;
     if (!turnstileToken) {
-      if (note) { note.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Please complete the verification check, then try again.'; note.style.color = '#c0392b'; }
+      if (note) { note.textContent = 'Please complete the verification check, then try again.'; note.style.color = '#c0392b'; }
       return;
     }
 
@@ -92,14 +92,14 @@ if (nlForm) {
 
     if (error) {
       btn.textContent = original;
-      if (note) { note.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Something went wrong — please try again.'; note.style.color = '#c0392b'; }
+      if (note) { note.textContent = 'Something went wrong — please try again.'; note.style.color = '#c0392b'; }
       return;
     }
 
     btn.textContent = 'You\'re in! ✓';
     btn.style.background = '#4ade80';
     btn.style.borderColor = '#4ade80';
-    if (note) { note.innerHTML = '<i class="fas fa-lock"></i> no spam, ever. unsubscribe at any time.'; note.style.color = ''; }
+    if (note) { note.textContent = 'no spam, ever. unsubscribe at any time.'; note.style.color = ''; }
     nlForm.reset();
 
     setTimeout(() => {
