@@ -1793,3 +1793,16 @@ body.search-open {
 .elfsight-app-163154fa-e873-4528-8de5-aba4184f381c [class*="PoweredBy"] {
   display: none !important;
 }
+
+/* ============================================
+   LEGAL PAGES (Privacy, Terms, Disclosure, Cookies)
+   ============================================ */
+.legal-content { max-width: 760px; margin: 0 auto; font-size: 16px; line-height: 1.8; color: var(--off-black); }
+.legal-updated { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
+.legal-content h2 { font-family: var(--font-serif); font-weight: 600; font-size: 24px; margin: 40px 0 14px; color: var(--black); }
+.legal-content h2:first-of-type { margin-top: 0; }
+.legal-content h3 { font-family: var(--font-serif); font-weight: 600; font-size: 18px; margin: 28px 0 10px; color: var(--black); }
+.legal-content p { margin-bottom: 16px; }
+.legal-content ul, .legal-content ol { padding-left: 24px; margin-bottom: 16px; }
+.legal-content li { margin-bottom: 8px; }
+.legal-content a { color: #b7410e; text-decoration: underline; }

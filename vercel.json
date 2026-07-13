@@ -14,6 +14,10 @@
     { "source": "/press", "destination": "/press.html" },
     { "source": "/resources", "destination": "/resources.html" },
     { "source": "/work-with-me", "destination": "/work-with-me.html" },
-    { "source": "/admin", "destination": "/admin.html" }
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
+    { "source": "/terms-of-use", "destination": "/terms-of-use.html" },
+    { "source": "/disclosure", "destination": "/disclosure.html" },
+    { "source": "/cookie-policy", "destination": "/cookie-policy.html" }
   ]
 }
