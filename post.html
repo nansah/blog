@@ -13,12 +13,12 @@
   </script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9729982323822349"
      crossorigin="anonymous"></script>
-  <title>Post — Nana Yaa Ansah</title>
+  <title>Blog — Nana Yaa Ansah</title>
   <meta id="metaDesc" name="description" content="Nana Yaa Ansah" />
-  <link id="canonicalLink" rel="canonical" href="https://nanayaaansah.com/post" />
+  <link id="canonicalLink" rel="canonical" href="https://nanayaaansah.com/blog" />
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="Nana Yaa Ansah" />
-  <meta id="ogUrl" property="og:url" content="https://nanayaaansah.com/post" />
+  <meta id="ogUrl" property="og:url" content="https://nanayaaansah.com/blog" />
   <meta id="ogTitle" property="og:title" content="Nana Yaa Ansah" />
   <meta id="ogDesc" property="og:description" content="Nana Yaa Ansah" />
   <meta id="ogImage" property="og:image" content="https://nanayaaansah.com/images/hero-nana-yaa.jpg" />
@@ -366,7 +366,7 @@
       const pageTitle = `${post.title} — Nana Yaa Ansah`;
       const desc = post.excerpt || 'Read on Nana Yaa Ansah, New York City lifestyle influencer.';
       const catSlug = post.category ? post.category.toLowerCase() + '/' : '';
-      const url = `https://nanayaaansah.com/post/${catSlug}${post.slug || post.id}`;
+      const url = `https://nanayaaansah.com/blog/${catSlug}${post.slug || post.id}`;
       const image = post.image || 'https://nanayaaansah.com/images/hero-nana-yaa.jpg';
 
       document.title = pageTitle;
@@ -456,8 +456,8 @@
       document.getElementById('postRoot').innerHTML = `
         <div class="not-found">
           <i class="fas fa-file-circle-question"></i>
-          <h2>Post Not Found</h2>
-          <p>This post doesn't exist or may have been removed. Try browsing from the homepage.</p>
+          <h2>Blog Post Not Found</h2>
+          <p>This blog post doesn't exist or may have been removed. Try browsing from the homepage.</p>
           <a href="/" class="btn btn-gold" style="margin-top:8px;">Back to Home</a>
         </div>`;
     }
@@ -550,14 +550,14 @@
       if (bar) bar.style.width = pct + '%';
     }, { passive: true });
 
-    // Resolves the post from a clean URL first — either /post/category/slug
-    // (current format) or the older /post/slug — then falls back to
-    // ?slug= / ?id= query-string links so nothing already shared breaks.
-    // The category segment is purely cosmetic/SEO; the slug (last segment)
-    // is what's actually looked up, so both URL shapes work identically.
+    // Resolves the post from a clean URL first — /blog/category/slug
+    // (current format), or the older /post/category/slug or /post/slug —
+    // then falls back to ?slug= / ?id= query-string links so nothing
+    // already shared breaks. Only the last path segment (the slug) is
+    // actually looked up, so any of these URL shapes work identically.
     (async function init() {
       const params = new URLSearchParams(window.location.search);
-      const pathParts = window.location.pathname.replace(/^\/post\/?/, '').replace(/\/$/, '').split('/').filter(Boolean);
+      const pathParts = window.location.pathname.replace(/\/$/, '').split('/').filter(Boolean);
       const pathSlug = decodeURIComponent(pathParts[pathParts.length - 1] || '');
       const slug = pathSlug || params.get('slug');
       const id   = params.get('id') || params.get('edit');

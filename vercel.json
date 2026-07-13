@@ -1,6 +1,8 @@
 {
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/blog/:category/:slug", "destination": "/post.html" },
+    { "source": "/blog/:slug", "destination": "/post.html" },
     { "source": "/post/:category/:slug", "destination": "/post.html" },
     { "source": "/post/:slug", "destination": "/post.html" },
     { "source": "/post", "destination": "/post.html" },

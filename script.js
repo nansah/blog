@@ -315,7 +315,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     card.className = 'post-card reveal admin-post';
     const catSlug = post.category ? esc(post.category.toLowerCase()) + '/' : '';
     card.innerHTML = `
-      <a href="/post/${catSlug}${esc(post.slug || post.id)}" class="post-card-link" style="display:block;text-decoration:none;color:inherit;">
+      <a href="/blog/${catSlug}${esc(post.slug || post.id)}" class="post-card-link" style="display:block;text-decoration:none;color:inherit;">
         <div class="post-img-wrap">
           ${post.image
             ? `<img src="${esc(post.image)}" alt="${esc(post.title)}" loading="lazy" style="object-position: ${post.focal_x ?? 50}% ${post.focal_y ?? 50}%;" />`
