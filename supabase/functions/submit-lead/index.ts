@@ -22,7 +22,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const RESEND_AUDIENCE_ID = '0ed862f3-758a-4eba-a384-a8627609ce5e';
-const RESEND_FROM = 'Nana Yaa <hi@send.nanayaaansah.com>';
+const RESEND_FROM = 'Nana Yaa <hi@nanayaaansah.com>';
 const WORKSHEET_URL = 'https://nanayaaansah.com/wardrobe_audit_worksheet.pdf';
 
 const corsHeaders = {
