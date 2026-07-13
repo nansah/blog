@@ -258,7 +258,7 @@ button { font-family: inherit; }
 .header.scrolled .nav { padding: 18px 44px; }
 
 .nav-left, .nav-right {
-  display: flex; align-items: center; gap: 32px;
+  display: flex; align-items: center; gap: 18px; flex-wrap: nowrap;
 }
 
 .nav-link {
@@ -1699,6 +1699,10 @@ body.search-open {
   .contact-info-col { padding-top: 0; flex-direction: row; flex-wrap: wrap; }
   .contact-info-card { flex: 1; min-width: 200px; }
   .as-seen-grid { grid-template-columns: repeat(3, 1fr); }
+
+  .nav { padding: 22px 24px; }
+  .nav-left, .nav-right { gap: 12px; }
+  .nav-logo a { font-size: 24px; }
 }
 
 @media (max-width: 860px) {
