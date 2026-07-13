@@ -1,6 +1,7 @@
 {
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/post/:category/:slug", "destination": "/post.html" },
     { "source": "/post/:slug", "destination": "/post.html" },
     { "source": "/post", "destination": "/post.html" },
     { "source": "/about", "destination": "/about.html" },
