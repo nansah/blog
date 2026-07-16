@@ -10,9 +10,18 @@ const nlForm      = document.getElementById('newsletterForm');
 const navSearchButtons = document.querySelectorAll('.nav-search');
 
 // ── Sticky nav + scroll-to-top visibility ──────────────────────────────────
+// Pages with a dark hero banner (post.html, about.html, etc.) hardcode the
+// "scrolled" class from the start so the nav is always readable — only the
+// homepage wants the transparent-until-you-scroll toggle behavior. Without
+// this check, toggling "scrolled" off at the top of the page would strip
+// those pages' solid nav background right when they load, leaving dark nav
+// text sitting on a dark hero image.
+const headerStartsScrolled = header && header.classList.contains('scrolled');
 window.addEventListener('scroll', () => {
-  const scrolled = window.scrollY > 60;
-  if (header) header.classList.toggle('scrolled', scrolled);
+  if (header) {
+    if (headerStartsScrolled) header.classList.add('scrolled');
+    else header.classList.toggle('scrolled', window.scrollY > 60);
+  }
   if (scrollTopBtn) scrollTopBtn.classList.toggle('visible', window.scrollY > 400);
 }, { passive: true });
 
