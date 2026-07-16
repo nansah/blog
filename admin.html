@@ -1392,7 +1392,7 @@ function postRows(posts) {
   if (!posts.length) return `<div class="empty-state"><i class="fas fa-file-alt"></i>No posts yet. <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="nav('editor')">Create first post</button></div>`;
   return `<table><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Date</th><th style="width:100px;">Actions</th></tr></thead><tbody>
     ${posts.map(p=>`<tr>
-      <td class="t-title">${p.featured?`<i class="fas fa-star" style="color:var(--gold);font-size:11px;margin-right:5px;" title="Featured post"></i>`:''}${esc(p.title||'Untitled')}<small>${esc(p.slug||'')}</small></td>
+      <td class="t-title">${p.featured?`<i class="fas fa-star" style="color:var(--gold);font-size:11px;margin-right:5px;" title="Featured post"></i>`:''}${p.image?`<i class="fas fa-image" style="color:var(--gold);font-size:11px;margin-right:5px;" title="Has featured image"></i>`:`<i class="far fa-image" style="color:var(--border);font-size:11px;margin-right:5px;" title="No featured image"></i>`}${esc(p.title||'Untitled')}<small>${esc(p.slug||'')}</small></td>
       <td>${p.category?`<span class="badge b-cat">${esc(p.category)}</span>`:'—'}</td>
       <td><span class="badge b-${p.status||'draft'}">${p.status||'draft'}</span></td>
       <td style="white-space:nowrap;font-size:12px;color:var(--muted);">${fmtDate(p.publishedAt||p.createdAt)}</td>
