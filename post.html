@@ -231,17 +231,16 @@
 
     /* Only ever shown to the logged-in admin (checked via Supabase auth
        session), never to regular site visitors. */
-    .admin-edit-fab {
-      position: fixed; bottom: 28px; left: 28px; z-index: 999;
-      display: none; align-items: center; gap: 8px;
-      background: var(--black, #1c1712); color: #fff;
-      padding: 12px 20px; border-radius: 30px;
+    .admin-edit-inline { display: none; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e9e0d3; }
+    .admin-edit-inline.visible { display: block; }
+    .admin-edit-inline a {
+      display: inline-flex; align-items: center; gap: 8px;
       font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 600;
-      text-decoration: none; box-shadow: var(--shadow-md, 0 4px 14px rgba(0,0,0,.25));
+      color: var(--muted, #7a6f63); text-decoration: none;
+      padding: 9px 18px; border: 1px solid #e9e0d3; border-radius: 30px;
       transition: var(--transition, all .2s);
     }
-    .admin-edit-fab.visible { display: flex; }
-    .admin-edit-fab:hover { background: #b7410e; transform: translateY(-3px); }
+    .admin-edit-inline a:hover { color: #fff; background: #1c1712; border-color: #1c1712; }
   </style>
 </head>
 <body class="category-page">
@@ -342,9 +341,6 @@
     <i class="fas fa-arrow-up"></i>
   </button>
 
-  <a class="admin-edit-fab" id="adminEditFab" href="#">
-    <i class="fas fa-pencil-alt"></i> Edit Post
-  </a>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/supabase-client.js"></script>
@@ -453,6 +449,9 @@
             ${!post.image ? '' : `<img src="${esc(post.image)}" alt="${esc(post.title)}" loading="lazy" style="object-position: ${focalPos};" class="article-top-image" />`}
             <div class="article-body" id="articleBody">${articleHTML}</div>
             ${tags.length?`<div class="post-tags">${tags.map(t=>`<span class="post-tag">#${esc(t)}</span>`).join('')}</div>`:''}
+            <div class="admin-edit-inline" id="adminEditInline">
+              <a href="#" id="adminEditLink"><i class="fas fa-pencil-alt"></i> Edit This Post</a>
+            </div>
           </div>
           <aside class="post-sidebar" id="postSidebar"></aside>
         </div>
@@ -593,22 +592,25 @@
       if (slug) post = await getPostBySlug(slug);
       else if (id) post = await getPostById(id);
 
-      if (post) { renderPost(post); showAdminEditFab(post); }
+      if (post) { renderPost(post); showAdminEditLink(post); }
       else renderNotFound();
     })();
 
-    // Shows a floating "Edit Post" link to the logged-in admin only —
-    // gated on an active Supabase auth session (the same one admin.html
-    // uses), not IP address, since IPs are shared/dynamic (VPNs, mobile
-    // networks, coffee shops) and can't reliably identify a specific user.
-    async function showAdminEditFab(post) {
+    // Shows an inline "Edit This Post" link at the bottom of the article
+    // to the logged-in admin only — gated on an active Supabase auth
+    // session (the same one admin.html uses), not IP address, since IPs
+    // are shared/dynamic (VPNs, mobile networks, coffee shops) and can't
+    // reliably identify a specific user.
+    async function showAdminEditLink(post) {
       if (!post || !post.id || typeof supabaseClient === 'undefined') return;
       try {
         const { data } = await supabaseClient.auth.getSession();
         if (!data.session) return;
-        const fab = document.getElementById('adminEditFab');
-        fab.href = `/admin?edit=${encodeURIComponent(post.id)}`;
-        fab.classList.add('visible');
+        const wrap = document.getElementById('adminEditInline');
+        const link = document.getElementById('adminEditLink');
+        if (!wrap || !link) return;
+        link.href = `/admin?edit=${encodeURIComponent(post.id)}`;
+        wrap.classList.add('visible');
       } catch {}
     }
   </script>
