@@ -2447,7 +2447,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       sel.removeAllRanges();
       sel.addRange(savedFormatRange);
     }
-    document.execCommand('formatBlock',false,val);
+    // Angle-bracket form ('<p>' not 'P') is required by Safari/WebKit;
+    // Chrome/Firefox accept both, so this is the safe cross-browser form.
+    document.execCommand('formatBlock',false,`<${val}>`);
   });
 
   // Toolbar: link
