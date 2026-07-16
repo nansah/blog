@@ -228,6 +228,20 @@
       .post-hero-inner { padding: 24px 18px; }
       .article-wrap { padding: 32px 16px 52px; }
     }
+
+    /* Only ever shown to the logged-in admin (checked via Supabase auth
+       session), never to regular site visitors. */
+    .admin-edit-fab {
+      position: fixed; bottom: 28px; left: 28px; z-index: 999;
+      display: none; align-items: center; gap: 8px;
+      background: var(--black, #1c1712); color: #fff;
+      padding: 12px 20px; border-radius: 30px;
+      font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 600;
+      text-decoration: none; box-shadow: var(--shadow-md, 0 4px 14px rgba(0,0,0,.25));
+      transition: var(--transition, all .2s);
+    }
+    .admin-edit-fab.visible { display: flex; }
+    .admin-edit-fab:hover { background: #b7410e; transform: translateY(-3px); }
   </style>
 </head>
 <body class="category-page">
@@ -327,6 +341,10 @@
   <button class="scroll-top-btn" id="scrollTopBtn" aria-label="Back to top">
     <i class="fas fa-arrow-up"></i>
   </button>
+
+  <a class="admin-edit-fab" id="adminEditFab" href="#">
+    <i class="fas fa-pencil-alt"></i> Edit Post
+  </a>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/supabase-client.js"></script>
@@ -575,9 +593,24 @@
       if (slug) post = await getPostBySlug(slug);
       else if (id) post = await getPostById(id);
 
-      if (post) renderPost(post);
+      if (post) { renderPost(post); showAdminEditFab(post); }
       else renderNotFound();
     })();
+
+    // Shows a floating "Edit Post" link to the logged-in admin only —
+    // gated on an active Supabase auth session (the same one admin.html
+    // uses), not IP address, since IPs are shared/dynamic (VPNs, mobile
+    // networks, coffee shops) and can't reliably identify a specific user.
+    async function showAdminEditFab(post) {
+      if (!post || !post.id || typeof supabaseClient === 'undefined') return;
+      try {
+        const { data } = await supabaseClient.auth.getSession();
+        if (!data.session) return;
+        const fab = document.getElementById('adminEditFab');
+        fab.href = `/admin?edit=${encodeURIComponent(post.id)}`;
+        fab.classList.add('visible');
+      } catch {}
+    }
   </script>
 </body>
 </html>

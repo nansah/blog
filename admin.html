@@ -2193,11 +2193,18 @@ async function enterApp() {
     document.getElementById('avatarInitial').textContent = email[0].toUpperCase();
   }
   let lastView = { view: 'dashboard', id: null };
-  try {
-    const saved = JSON.parse(localStorage.getItem('adminLastView') || 'null');
-    if (saved && saved.view) lastView = saved;
-  } catch {}
-  try { history.replaceState({ view: lastView.view, id: lastView.id }, '', location.pathname + location.search); } catch {}
+  // The public post pages link logged-in admins straight into the editor
+  // via /admin?edit=<id> (see the Edit Post button on post.html).
+  const editParam = new URLSearchParams(location.search).get('edit');
+  if (editParam) {
+    lastView = { view: 'editor', id: editParam };
+  } else {
+    try {
+      const saved = JSON.parse(localStorage.getItem('adminLastView') || 'null');
+      if (saved && saved.view) lastView = saved;
+    } catch {}
+  }
+  try { history.replaceState({ view: lastView.view, id: lastView.id }, '', location.pathname); } catch {}
   nav(lastView.view, lastView.id, { push:false });
 }
 
