@@ -2426,10 +2426,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Toolbar: format block
+  // Clicking the <select> moves browser focus off eContent before 'change'
+  // fires, which collapses/clears the text selection — so formatBlock had
+  // nothing to act on. Save the range on mousedown (before focus moves)
+  // and restore it once eContent is refocused.
+  let savedFormatRange = null;
+  document.getElementById('tbFormat').addEventListener('mousedown',()=>{
+    const sel = window.getSelection();
+    const eContentEl = document.getElementById('eContent');
+    if (sel && sel.rangeCount && eContentEl.contains(sel.anchorNode)) {
+      savedFormatRange = sel.getRangeAt(0).cloneRange();
+    }
+  });
   document.getElementById('tbFormat').addEventListener('change',e=>{
     const val = e.target.value || 'P';
+    const eContentEl = document.getElementById('eContent');
+    eContentEl.focus();
+    if (savedFormatRange) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedFormatRange);
+    }
     document.execCommand('formatBlock',false,val);
-    document.getElementById('eContent').focus();
     e.target.value='';
   });
 
