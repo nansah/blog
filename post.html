@@ -551,6 +551,21 @@
     // actually looked up, so any of these URL shapes work identically.
     (async function init() {
       const params = new URLSearchParams(window.location.search);
+
+      // Draft/preview mode: the editor stashes unsaved form state in
+      // localStorage rather than the database, so it can be previewed
+      // without publishing or overwriting the saved version.
+      if (params.get('preview') === '1') {
+        let post = null;
+        try { post = JSON.parse(localStorage.getItem('nyc_blog_preview_post') || 'null'); } catch {}
+        if (post) {
+          renderPost(post);
+        } else {
+          renderNotFound();
+        }
+        return;
+      }
+
       const pathParts = window.location.pathname.replace(/\/$/, '').split('/').filter(Boolean);
       const pathSlug = decodeURIComponent(pathParts[pathParts.length - 1] || '');
       const slug = pathSlug || params.get('slug');

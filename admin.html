@@ -493,6 +493,7 @@
                 <input type="datetime-local" class="meta-in" id="eDate" />
               </div>
               <div class="pub-btns">
+                <button class="pb draft" id="btnPreview"><i class="fas fa-eye"></i> Preview</button>
                 <button class="pb primary" id="btnPublish">Publish</button>
                 <button class="pb draft" id="btnDraft">Save Draft</button>
               </div>
@@ -1920,6 +1921,22 @@ function collectEditorData(status) {
   return { title, slug, content, excerpt, category, tags, image, readTime, status, focal_x, focal_y, publishedAt: dateVal?nyDatetimeLocalToISO(dateVal):new Date().toISOString() };
 }
 
+// Previews unsaved editor changes without writing to the database: the
+// current form state is stashed in localStorage and post.html is opened in
+// preview mode, where it reads from there instead of Supabase.
+function previewPost() {
+  const status = document.getElementById('eStatus').value || 'draft';
+  const data = collectEditorData(status);
+  if (!data.title) { toast('Add a title before previewing.','warning'); return; }
+  try {
+    localStorage.setItem('nyc_blog_preview_post', JSON.stringify({ ...data, id: editingId || 'preview' }));
+  } catch {
+    toast('Could not open preview.', 'error');
+    return;
+  }
+  window.open('/post.html?preview=1', '_blank');
+}
+
 async function savePost(status) {
   const data = collectEditorData(status);
   if (!data.title) { toast('Add a title before saving.','warning'); return; }
@@ -2192,6 +2209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Editor: publish/draft buttons
   document.getElementById('btnPublish').addEventListener('click',()=>savePost('published'));
   document.getElementById('btnDraft').addEventListener('click',()=>savePost('draft'));
+  document.getElementById('btnPreview').addEventListener('click',previewPost);
 
   // Editor: delete
   document.getElementById('btnDelete').addEventListener('click',()=>{ if(editingId) confirmDel(editingId); });
