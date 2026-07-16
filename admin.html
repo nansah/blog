@@ -2486,6 +2486,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (url) document.execCommand('createLink', false, url);
   });
 
+  // Ctrl+K / Cmd+K inserts a link at the current selection, matching the
+  // shortcut convention from Notion/Docs/Slack.
+  eContent.addEventListener('keydown', e => {
+    if (!((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) return;
+    e.preventDefault();
+    const selText = window.getSelection().toString();
+    const url = prompt('URL:', selText.startsWith('http') ? selText : 'https://');
+    if (url) document.execCommand('createLink', false, url);
+  });
+
   // Toolbar: HTML source toggle
   let srcOpen = false;
   document.getElementById('tbHtml').addEventListener('click',()=>{
