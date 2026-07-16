@@ -932,12 +932,56 @@
     <div id="panelSidebar" class="panel hidden">
       <div class="table-wrap">
         <div class="table-head">
+          <span class="table-title">Block Content</span>
+        </div>
+        <div class="settings-grid" style="padding:20px;">
+          <div class="s-card">
+            <div class="e-section-label" style="padding:14px 20px 0;"><i class="fas fa-id-card"></i> Profile Block</div>
+            <div class="s-body">
+              <div class="s-field"><label class="s-lbl">Photo URL</label><input type="text" class="s-in" id="pbImage" placeholder="https://…" /></div>
+              <div class="s-field"><label class="s-lbl">Or upload</label><input type="file" id="pbImageFile" accept="image/*" class="file-input" /></div>
+              <div class="s-field"><label class="s-lbl">Name</label><input type="text" class="s-in" id="pbName" placeholder="Nana Yaa Ansah" /></div>
+              <div class="s-field"><label class="s-lbl">Bio</label><input type="text" class="s-in" id="pbBio" placeholder="Short bio line…" /></div>
+              <div class="s-field"><label class="s-lbl">Link Text</label><input type="text" class="s-in" id="pbLinkText" placeholder="Read My Story" /></div>
+              <div class="s-field"><label class="s-lbl">Link URL</label><input type="text" class="s-in" id="pbLinkUrl" placeholder="/about" /></div>
+              <button class="btn btn-primary btn-sm" style="align-self:flex-start;" id="btnSaveProfileBlock">Save Profile Block</button>
+            </div>
+          </div>
+          <div class="s-card">
+            <div class="e-section-label" style="padding:14px 20px 0;"><i class="fas fa-heart"></i> Faves Block</div>
+            <div class="s-body">
+              <div class="s-field"><label class="s-lbl">Image URL</label><input type="text" class="s-in" id="fbImage" placeholder="https://…" /></div>
+              <div class="s-field"><label class="s-lbl">Or upload</label><input type="file" id="fbImageFile" accept="image/*" class="file-input" /></div>
+              <div class="s-field"><label class="s-lbl">Text</label><input type="text" class="s-in" id="fbText" placeholder="My go-to products and picks…" /></div>
+              <div class="s-field"><label class="s-lbl">Link Text</label><input type="text" class="s-in" id="fbLinkText" placeholder="Shop Now" /></div>
+              <div class="s-field"><label class="s-lbl">Link URL</label><input type="text" class="s-in" id="fbLinkUrl" placeholder="/faves" /></div>
+              <button class="btn btn-primary btn-sm" style="align-self:flex-start;" id="btnSaveFavesBlock">Save Faves Block</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:20px;">
+        <div class="table-head">
           <span class="table-title">Post Sidebar</span>
         </div>
         <div style="padding:20px;">
           <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Drag to reorder how these blocks appear in the sidebar on every blog post page.</p>
           <div id="sidebarBlockList" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:20px;">
+        <div class="table-head">
+          <span class="table-title">Quick Links</span>
+        </div>
+        <p style="font-size:13px;color:var(--muted);padding:16px 20px 0;">Custom links shown in the "Quick Links" sidebar block (drag it into place above to show it). Edit a link's label/URL and hit save, or add a new one below.</p>
+        <div style="display:flex; gap:10px; padding:16px 20px; border-bottom:1px solid var(--border);">
+          <input type="text" class="s-in" id="newLinkLabel" placeholder="Link label…" style="flex:1;" />
+          <input type="text" class="s-in" id="newLinkUrl" placeholder="https://…" style="flex:1;" />
+          <button class="btn btn-primary btn-sm" id="btnAddSidebarLink"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div id="sidebarLinksListBody" style="padding:16px 20px; display:flex; flex-direction:column; gap:10px;"></div>
       </div>
     </div>
 
@@ -1285,6 +1329,31 @@ const PressDB = {
   },
 };
 
+/* ── POST SIDEBAR QUICK LINKS (post pages) ──────────────── */
+const SidebarLinksDB = {
+  async getLinks() {
+    const { data, error } = await supabaseClient.from('sidebar_links').select('*').order('sort_order', { ascending: true });
+    if (error) { toast('Could not load sidebar links: ' + error.message, 'error'); return []; }
+    return data;
+  },
+  async createLink(label, url) {
+    const row = { id: uid(), label, url, sort_order: Date.now() };
+    const { data, error } = await supabaseClient.from('sidebar_links').insert(row).select().single();
+    if (error) { toast('Could not add link: ' + error.message, 'error'); return null; }
+    return data;
+  },
+  async updateLink(id, label, url) {
+    const { error } = await supabaseClient.from('sidebar_links').update({ label, url }).eq('id', id);
+    if (error) { toast('Could not save link: ' + error.message, 'error'); return false; }
+    return true;
+  },
+  async deleteLink(id) {
+    const { error } = await supabaseClient.from('sidebar_links').delete().eq('id', id);
+    if (error) { toast('Could not delete link: ' + error.message, 'error'); return false; }
+    return true;
+  },
+};
+
 /* ── POST SIDEBAR ORDER (post pages) ────────────────────── */
 const SidebarDB = {
   async getBlocks() {
@@ -1299,6 +1368,11 @@ const SidebarDB = {
     const results = await Promise.all(updates);
     const error = results.find(r => r.error)?.error;
     if (error) { toast('Could not save order: ' + error.message, 'error'); return false; }
+    return true;
+  },
+  async updateContent(id, content) {
+    const { error } = await supabaseClient.from('sidebar_blocks').update({ content }).eq('id', id);
+    if (error) { toast('Could not save: ' + error.message, 'error'); return false; }
     return true;
   },
 };
@@ -1835,6 +1909,51 @@ async function renderSidebarPanel() {
   const blocks = await SidebarDB.getBlocks();
   sidebarBlockOrder = blocks.map(b => b.id);
   renderSidebarBlockList(blocks);
+  renderSidebarLinksList();
+
+  const profile = blocks.find(b => b.id === 'profile')?.content || {};
+  document.getElementById('pbImage').value    = profile.image    || '';
+  document.getElementById('pbName').value     = profile.name     || '';
+  document.getElementById('pbBio').value      = profile.bio      || '';
+  document.getElementById('pbLinkText').value = profile.link_text|| '';
+  document.getElementById('pbLinkUrl').value  = profile.link_url || '';
+
+  const faves = blocks.find(b => b.id === 'faves')?.content || {};
+  document.getElementById('fbImage').value    = faves.image    || '';
+  document.getElementById('fbText').value     = faves.text     || '';
+  document.getElementById('fbLinkText').value = faves.link_text|| '';
+  document.getElementById('fbLinkUrl').value  = faves.link_url || '';
+}
+
+async function renderSidebarLinksList() {
+  const links = await SidebarLinksDB.getLinks();
+  const body = document.getElementById('sidebarLinksListBody');
+  if (!links.length) { body.innerHTML = `<div class="empty-state"><i class="fas fa-link"></i>No quick links yet. Add one above.</div>`; return; }
+  body.innerHTML = links.map(l => `
+    <div class="s-field" data-link-row="${l.id}" style="flex-direction:row; align-items:center; gap:10px;">
+      <input type="text" class="s-in" data-field="label" value="${esc(l.label||'')}" placeholder="Link label…" style="flex:1;" />
+      <input type="text" class="s-in" data-field="url" value="${esc(l.url||'')}" placeholder="https://…" style="flex:1;" />
+      <button class="btn-icon" title="Save" onclick="saveSidebarLink('${l.id}')"><i class="fas fa-check"></i></button>
+      <button class="btn-icon del" title="Delete" onclick="confirmDelSidebarLink('${l.id}')"><i class="fas fa-trash"></i></button>
+    </div>
+  `).join('');
+}
+
+async function saveSidebarLink(id) {
+  const row = document.querySelector(`[data-link-row="${id}"]`);
+  const label = row.querySelector('[data-field="label"]').value.trim();
+  const url = row.querySelector('[data-field="url"]').value.trim();
+  if (!label || !url) { toast('Both label and URL are required', 'error'); return; }
+  const ok = await SidebarLinksDB.updateLink(id, label, url);
+  if (ok) toast('Link updated!', 'success');
+}
+
+function confirmDelSidebarLink(id) {
+  openModal('Delete this link?','This will remove it from the Quick Links sidebar block.', async ()=>{
+    await SidebarLinksDB.deleteLink(id);
+    toast('Deleted.', 'success');
+    renderSidebarLinksList();
+  });
 }
 
 function renderSidebarBlockList(blocks) {
@@ -2352,6 +2471,54 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('newBrandName').addEventListener('keydown', e=>{
     if (e.key === 'Enter') document.getElementById('btnAddBrand').click();
+  });
+
+  // Post sidebar: add quick link
+  document.getElementById('btnAddSidebarLink').addEventListener('click', async ()=>{
+    const labelInput = document.getElementById('newLinkLabel');
+    const urlInput = document.getElementById('newLinkUrl');
+    const label = labelInput.value.trim();
+    const url = urlInput.value.trim();
+    if (!label || !url) { toast('Enter both a label and a URL', 'error'); return; }
+    const created = await SidebarLinksDB.createLink(label, url);
+    if (created) { labelInput.value = ''; urlInput.value = ''; toast('Link added!', 'success'); renderSidebarLinksList(); }
+  });
+
+  // Post sidebar: Profile block content
+  document.getElementById('pbImageFile').addEventListener('change', async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    toast('Uploading image…','success');
+    const url = await uploadImageFile(file);
+    if (url) document.getElementById('pbImage').value = url;
+  });
+  document.getElementById('btnSaveProfileBlock').addEventListener('click', async ()=>{
+    const content = {
+      image: document.getElementById('pbImage').value.trim(),
+      name: document.getElementById('pbName').value.trim(),
+      bio: document.getElementById('pbBio').value.trim(),
+      link_text: document.getElementById('pbLinkText').value.trim(),
+      link_url: document.getElementById('pbLinkUrl').value.trim(),
+    };
+    const ok = await SidebarDB.updateContent('profile', content);
+    if (ok) toast('Profile block updated!', 'success');
+  });
+
+  // Post sidebar: Faves block content
+  document.getElementById('fbImageFile').addEventListener('change', async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    toast('Uploading image…','success');
+    const url = await uploadImageFile(file);
+    if (url) document.getElementById('fbImage').value = url;
+  });
+  document.getElementById('btnSaveFavesBlock').addEventListener('click', async ()=>{
+    const content = {
+      image: document.getElementById('fbImage').value.trim(),
+      text: document.getElementById('fbText').value.trim(),
+      link_text: document.getElementById('fbLinkText').value.trim(),
+      link_url: document.getElementById('fbLinkUrl').value.trim(),
+    };
+    const ok = await SidebarDB.updateContent('faves', content);
+    if (ok) toast('Faves block updated!', 'success');
   });
 
   // Past collaboration editor: status change

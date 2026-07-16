@@ -173,9 +173,9 @@
     .sidebar-profile p { font-size: 13px; color: #7a6f63; line-height: 1.6; margin-bottom: 14px; }
     .sidebar-profile a { font-size: 12px; color: #a9603f; font-weight: 600; text-decoration: none; }
     .sidebar-profile a:hover { text-decoration: underline; }
-    .sidebar-categories ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .sidebar-categories a { font-size: 13px; color: #3a3129; font-weight: 500; }
-    .sidebar-categories a:hover { color: #a9603f; }
+    .sidebar-categories ul, .sidebar-links ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-categories a, .sidebar-links a { font-size: 13px; color: #3a3129; font-weight: 500; }
+    .sidebar-categories a:hover, .sidebar-links a:hover { color: #a9603f; }
     .sidebar-faves p { font-size: 13px; color: #7a6f63; margin-bottom: 14px; line-height: 1.6; }
     .sidebar-btn {
       display: inline-block; padding: 10px 22px; background: #a9603f; color: #fff;
@@ -481,9 +481,13 @@
       if (!container || typeof supabaseClient === 'undefined') return;
 
       let order = ['profile', 'categories', 'faves', 'social'];
+      let blockContent = {};
       try {
         const { data } = await supabaseClient.from('sidebar_blocks').select('*').order('sort_order', { ascending: true });
-        if (data && data.length) order = data.map(b => b.id);
+        if (data && data.length) {
+          order = data.map(b => b.id);
+          data.forEach(b => { blockContent[b.id] = b.content || {}; });
+        }
       } catch {}
 
       const socialLinks = {};
@@ -492,20 +496,35 @@
         if (data) data.forEach(l => { socialLinks[l.id] = l; });
       } catch {}
 
+      let quickLinks = [];
+      try {
+        const { data } = await supabaseClient.from('sidebar_links').select('*').order('sort_order', { ascending: true });
+        if (data) quickLinks = data;
+      } catch {}
+
       const normalizeUrl = url => {
         if (!url || url === '#') return '';
+        if (url.startsWith('/')) return url; // relative site link (e.g. /about, /faves)
         return /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`;
       };
 
       const blockHTML = {
-        profile: () => `
-          <div class="sidebar-block sidebar-profile">
-            <img src="/images/hero-nana-yaa.jpg" alt="Nana Yaa Ansah" />
-            <h3>Nana Yaa Ansah</h3>
-            <p>NYC-based lifestyle creator writing about style, faith, and city life.</p>
-            <a href="/about">Read My Story &rarr;</a>
-          </div>
-        `,
+        profile: () => {
+          const c = blockContent.profile || {};
+          const image = esc(c.image || '/images/hero-nana-yaa.jpg');
+          const name = esc(c.name || 'Nana Yaa Ansah');
+          const bio = esc(c.bio || 'NYC-based lifestyle creator writing about style, faith, and city life.');
+          const linkText = esc(c.link_text || 'Read My Story');
+          const linkUrl = esc(normalizeUrl(c.link_url) || '/about');
+          return `
+            <div class="sidebar-block sidebar-profile">
+              <img src="${image}" alt="${name}" />
+              <h3>${name}</h3>
+              <p>${bio}</p>
+              <a href="${linkUrl}">${linkText} &rarr;</a>
+            </div>
+          `;
+        },
         categories: () => `
           <div class="sidebar-block sidebar-categories">
             <h4>Categories</h4>
@@ -517,13 +536,21 @@
             </ul>
           </div>
         `,
-        faves: () => `
-          <div class="sidebar-block sidebar-faves">
-            <h4>Shop My Faves</h4>
-            <p>My go-to products and picks, all in one place.</p>
-            <a href="/faves" class="sidebar-btn">Shop Now</a>
-          </div>
-        `,
+        faves: () => {
+          const c = blockContent.faves || {};
+          const text = esc(c.text || 'My go-to products and picks, all in one place.');
+          const linkText = esc(c.link_text || 'Shop Now');
+          const linkUrl = esc(normalizeUrl(c.link_url) || '/faves');
+          const image = c.image ? `<img src="${esc(c.image)}" alt="" style="width:100%;border-radius:8px;margin-bottom:12px;" />` : '';
+          return `
+            <div class="sidebar-block sidebar-faves">
+              <h4>Shop My Faves</h4>
+              ${image}
+              <p>${text}</p>
+              <a href="${linkUrl}" class="sidebar-btn">${linkText}</a>
+            </div>
+          `;
+        },
         social: () => {
           const icons = [
             { id: 'instagram', label: 'Instagram', icon: 'fab fa-instagram' },
@@ -541,6 +568,22 @@
             <div class="sidebar-block sidebar-social">
               <h4>Follow Along</h4>
               <div class="sidebar-social-icons">${links}</div>
+            </div>
+          `;
+        },
+        links: () => {
+          if (!quickLinks.length) return '';
+          const items = quickLinks.map(l => {
+            const url = normalizeUrl(l.url);
+            if (!url) return '';
+            const external = /^https?:/i.test(url) && !url.includes('nanayaaansah.com');
+            return `<li><a href="${url}"${external?' target="_blank" rel="noopener"':''}>${esc(l.label)}</a></li>`;
+          }).join('');
+          if (!items) return '';
+          return `
+            <div class="sidebar-block sidebar-links">
+              <h4>Quick Links</h4>
+              <ul>${items}</ul>
             </div>
           `;
         },
