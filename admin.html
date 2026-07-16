@@ -116,7 +116,8 @@
 
     /* ── STATS ── */
     .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
-    .stat-card { background: var(--white); border-radius: 12px; padding: 18px 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+    .stat-card { background: var(--white); border-radius: 12px; padding: 18px 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 14px; cursor: pointer; transition: box-shadow .15s, transform .15s; }
+    .stat-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.06); transform: translateY(-1px); }
     .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
     .si-gold { background: var(--gold-dim); color: var(--gold); }
     .si-green { background: rgba(34,197,94,.1); color: #22c55e; }
@@ -1376,11 +1377,24 @@ async function renderDashboard() {
   const drft = all.filter(p=>p.status!=='published');
   const cats = new Set(all.map(p=>p.category).filter(Boolean));
   document.getElementById('statsRow').innerHTML = `
-    <div class="stat-card"><div class="stat-icon si-gold"><i class="fas fa-file-alt"></i></div><div><div class="stat-num">${all.length}</div><div class="stat-lbl">Total Posts</div></div></div>
-    <div class="stat-card"><div class="stat-icon si-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-num">${pub.length}</div><div class="stat-lbl">Published</div></div></div>
-    <div class="stat-card"><div class="stat-icon si-blue"><i class="fas fa-pencil-alt"></i></div><div><div class="stat-num">${drft.length}</div><div class="stat-lbl">Drafts</div></div></div>
-    <div class="stat-card"><div class="stat-icon si-purple"><i class="fas fa-tags"></i></div><div><div class="stat-num">${cats.size}</div><div class="stat-lbl">Categories</div></div></div>`;
+    <div class="stat-card" onclick="navToPosts('')" title="View all posts"><div class="stat-icon si-gold"><i class="fas fa-file-alt"></i></div><div><div class="stat-num">${all.length}</div><div class="stat-lbl">Total Posts</div></div></div>
+    <div class="stat-card" onclick="navToPosts('published')" title="View published posts"><div class="stat-icon si-green"><i class="fas fa-check-circle"></i></div><div><div class="stat-num">${pub.length}</div><div class="stat-lbl">Published</div></div></div>
+    <div class="stat-card" onclick="navToPosts('draft')" title="View drafts"><div class="stat-icon si-blue"><i class="fas fa-pencil-alt"></i></div><div><div class="stat-num">${drft.length}</div><div class="stat-lbl">Drafts</div></div></div>
+    <div class="stat-card" onclick="navToPosts('','cat')" title="View all posts, filter by category"><div class="stat-icon si-purple"><i class="fas fa-tags"></i></div><div><div class="stat-num">${cats.size}</div><div class="stat-lbl">Categories</div></div></div>`;
   document.getElementById('dashPostsTable').innerHTML = postRows(all.slice(0,8));
+}
+
+// Dashboard stat cards jump to the All Posts view pre-filtered to match.
+// focusField optionally focuses a filter control once there (e.g. the
+// category dropdown, since "Categories" is a count rather than one value).
+function navToPosts(status, focusField) {
+  nav('posts').then(() => {
+    document.getElementById('fStatus').value = status || '';
+    document.getElementById('fCat').value = '';
+    document.getElementById('fSearch').value = '';
+    renderPostsTable();
+    if (focusField === 'cat') document.getElementById('fCat').focus();
+  });
 }
 
 /* ── POSTS TABLE ────────────────────────────────────────── */
