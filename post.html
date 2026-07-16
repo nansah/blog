@@ -104,6 +104,12 @@
       margin: 24px 0; display: block;
       box-shadow: 0 6px 28px rgba(0,0,0,.1);
     }
+    .article-top-image {
+      width: 100%; max-width: 100%; aspect-ratio: 16/9; object-fit: cover;
+      border-radius: 8px;
+      margin: 0 0 32px; display: block;
+      box-shadow: 0 6px 28px rgba(0,0,0,.1);
+    }
     .article-body blockquote {
       border-left: 3px solid #a9603f;
       padding: 14px 22px;
@@ -412,22 +418,9 @@
 
       // Re-showing the cover photo inline (not just in the hero banner) helps
       // it get picked up as part of the crawlable article content by SEO/
-      // Google Discover. It's placed around the midpoint of the body rather
-      // than at the very top, where it'd just duplicate the hero image.
-      const articleHTML = (() => {
-        const body = post.content || '<p>No content.</p>';
-        if (!post.image) return body;
-        const wrap = document.createElement('div');
-        wrap.innerHTML = body;
-        const blocks = Array.from(wrap.children);
-        const img = document.createElement('img');
-        img.src = post.image; img.alt = post.title; img.loading = 'lazy';
-        img.style.objectPosition = focalPos;
-        if (!blocks.length) { wrap.appendChild(img); return wrap.innerHTML; }
-        const mid = Math.floor(blocks.length / 2);
-        wrap.insertBefore(img, blocks[mid] || null);
-        return wrap.innerHTML;
-      })();
+      // Google Discover. Placed right after the meta bar, at the top of the
+      // article body.
+      const articleHTML = post.content || '<p>No content.</p>';
 
       root.innerHTML = `
         ${heroHTML}
@@ -439,6 +432,7 @@
               ${post.readTime?`<span><i class="fas fa-clock"></i> ${esc(post.readTime)}</span>`:''}
               <span><i class="fas fa-user"></i> Nana Yaa Ansah</span>
             </div>`}
+            ${!post.image ? '' : `<img src="${esc(post.image)}" alt="${esc(post.title)}" loading="lazy" style="object-position: ${focalPos};" class="article-top-image" />`}
             <div class="article-body" id="articleBody">${articleHTML}</div>
             ${tags.length?`<div class="post-tags">${tags.map(t=>`<span class="post-tag">#${esc(t)}</span>`).join('')}</div>`:''}
           </div>
