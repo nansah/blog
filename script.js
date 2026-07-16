@@ -292,6 +292,47 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
+// ── Homepage "Featured Post" — set from the CMS via the Featured Post
+//    toggle in the post editor's Publish panel. Falls back to the
+//    hardcoded markup already in the page if nothing is flagged featured.
+(async function renderFeaturedPost() {
+  const section = document.getElementById('featuredPost');
+  if (!section || typeof supabaseClient === 'undefined') return;
+
+  const { data, error } = await supabaseClient
+    .from('posts').select('*')
+    .eq('status', 'published').eq('featured', true)
+    .order('published_at', { ascending: false }).limit(1).maybeSingle();
+  if (error || !data) return;
+
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const fmtDate = iso => {
+    try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }); }
+    catch { return ''; }
+  };
+  const catSlug = data.category ? esc(data.category.toLowerCase()) + '/' : '';
+
+  const img = document.getElementById('featPostImg');
+  if (data.image) { img.src = data.image; img.style.objectPosition = `${data.focal_x ?? 50}% ${data.focal_y ?? 50}%`; }
+  img.alt = data.title || '';
+
+  const catEl = document.getElementById('featPostCat');
+  catEl.textContent = data.category || '';
+  catEl.style.display = data.category ? '' : 'none';
+
+  const dateEl = document.getElementById('featPostDate');
+  if (data.published_at) dateEl.innerHTML = `<i class="fas fa-calendar-alt"></i> ${fmtDate(data.published_at)}`;
+  else dateEl.style.display = 'none';
+
+  const readEl = document.getElementById('featPostReadTime');
+  if (data.read_time) readEl.innerHTML = `<i class="fas fa-clock"></i> ${esc(data.read_time)}`;
+  else readEl.style.display = 'none';
+
+  document.getElementById('featPostTitle').textContent = data.title || '';
+  document.getElementById('featPostExcerpt').textContent = data.excerpt || '';
+  document.getElementById('featPostLink').href = `/blog/${catSlug}${esc(data.slug || data.id)}`;
+})();
+
 // ── Inject published posts from Supabase into category pages ──────────────
 (async function renderRemotePosts() {
   const grid = document.querySelector('.posts-grid');

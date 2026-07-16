@@ -488,6 +488,10 @@
                 <span class="meta-lbl">Status</span>
                 <select class="meta-sel" id="eStatus"><option value="draft">Draft</option><option value="published">Published</option></select>
               </div>
+              <label class="meta-field" style="flex-direction:row;align-items:center;justify-content:space-between;cursor:pointer;">
+                <span class="meta-lbl" style="margin:0;">Featured Post</span>
+                <input type="checkbox" id="eFeatured" style="width:16px;height:16px;accent-color:var(--black);cursor:pointer;" />
+              </label>
               <div class="meta-field">
                 <span class="meta-lbl">Publish Date (ET)</span>
                 <input type="datetime-local" class="meta-in" id="eDate" />
@@ -1093,6 +1097,11 @@ const DB = {
     const { error } = await supabaseClient.from('posts').delete().eq('id', id);
     if (error) toast('Could not delete post: ' + error.message, 'error');
   },
+  // Only one post can be featured (homepage "This Week's Must-Read" slot),
+  // so marking a post featured clears the flag on every other post.
+  async clearFeaturedExcept(id) {
+    await supabaseClient.from('posts').update({ featured: false }).neq('id', id);
+  },
   async deleteAll() {
     const { error } = await supabaseClient.from('posts').delete().not('id', 'is', null);
     if (error) toast('Could not delete posts: ' + error.message, 'error');
@@ -1383,7 +1392,7 @@ function postRows(posts) {
   if (!posts.length) return `<div class="empty-state"><i class="fas fa-file-alt"></i>No posts yet. <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="nav('editor')">Create first post</button></div>`;
   return `<table><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Date</th><th style="width:100px;">Actions</th></tr></thead><tbody>
     ${posts.map(p=>`<tr>
-      <td class="t-title">${esc(p.title||'Untitled')}<small>${esc(p.slug||'')}</small></td>
+      <td class="t-title">${p.featured?`<i class="fas fa-star" style="color:var(--gold);font-size:11px;margin-right:5px;" title="Featured post"></i>`:''}${esc(p.title||'Untitled')}<small>${esc(p.slug||'')}</small></td>
       <td>${p.category?`<span class="badge b-cat">${esc(p.category)}</span>`:'—'}</td>
       <td><span class="badge b-${p.status||'draft'}">${p.status||'draft'}</span></td>
       <td style="white-space:nowrap;font-size:12px;color:var(--muted);">${fmtDate(p.publishedAt||p.createdAt)}</td>
@@ -1868,6 +1877,7 @@ async function initEditor(postId) {
   document.getElementById('eImgFile').value  = '';
   document.getElementById('eDate').value     = now;
   document.getElementById('eStatus').value   = 'draft';
+  document.getElementById('eFeatured').checked = false;
   document.getElementById('eFocalX').value = 50;
   document.getElementById('eFocalY').value = 50;
   showFocalPicker('imgPrev','imgFocalPicker','imgFocalHint','',50,50,'imgFocalMarker');
@@ -1886,6 +1896,7 @@ async function initEditor(postId) {
       document.getElementById('eImgUrl').value   = p.image||'';
       document.getElementById('eReadTime').value = p.readTime||'';
       document.getElementById('eStatus').value   = p.status||'draft';
+      document.getElementById('eFeatured').checked = !!p.featured;
       const d = p.publishedAt||p.createdAt;
       if (d) document.getElementById('eDate').value = isoToNYDatetimeLocal(d);
       const fx = p.focal_x ?? 50, fy = p.focal_y ?? 50;
@@ -1918,7 +1929,8 @@ function collectEditorData(status) {
   const dateVal = document.getElementById('eDate').value;
   const focal_x = parseInt(document.getElementById('eFocalX').value, 10) || 50;
   const focal_y = parseInt(document.getElementById('eFocalY').value, 10) || 50;
-  return { title, slug, content, excerpt, category, tags, image, readTime, status, focal_x, focal_y, publishedAt: dateVal?nyDatetimeLocalToISO(dateVal):new Date().toISOString() };
+  const featured = document.getElementById('eFeatured').checked;
+  return { title, slug, content, excerpt, category, tags, image, readTime, status, focal_x, focal_y, featured, publishedAt: dateVal?nyDatetimeLocalToISO(dateVal):new Date().toISOString() };
 }
 
 // Previews unsaved editor changes without writing to the database: the
@@ -1948,6 +1960,7 @@ async function savePost(status) {
     if (p) editingId = p.id;
     toast(`Post ${status==='published'?'published':'saved as draft'}!`, 'success');
   }
+  if (data.featured && editingId) await DB.clearFeaturedExcept(editingId);
   document.getElementById('btnDelete').classList.remove('hidden');
   setStatusUI(status);
   document.getElementById('eStatus').value = status;
