@@ -2448,7 +2448,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       sel.addRange(savedFormatRange);
     }
     document.execCommand('formatBlock',false,val);
-    e.target.value='';
   });
 
   // Toolbar: link
@@ -2516,6 +2515,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     floatingToolbar.classList.remove('hidden');
   }
   document.addEventListener('selectionchange', updateFloatingToolbar);
+
+  // Keep the Format dropdown showing the block type the cursor is
+  // actually in (Heading 1/2/3 or Paragraph), instead of always
+  // snapping back to "Paragraph" after a format is applied.
+  const tbFormat = document.getElementById('tbFormat');
+  function updateFormatSelect() {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || !eContent.contains(sel.anchorNode)) return;
+    let node = sel.anchorNode;
+    if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+    const block = node && node.closest ? node.closest('h1,h2,h3') : null;
+    tbFormat.value = block ? block.tagName : '';
+  }
+  document.addEventListener('selectionchange', updateFormatSelect);
   eContent.addEventListener('blur', () => {
     setTimeout(() => { if (!floatingToolbar.matches(':hover')) floatingToolbar.classList.add('hidden'); }, 150);
   });
