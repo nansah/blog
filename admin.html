@@ -2467,8 +2467,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (url) { document.execCommand('insertImage',false,url); }
   });
 
-  // Editor body: drag & drop an image file straight into the content
+  // Editor body: paste as plain text, reflowed into paragraphs. Pasting
+  // straight from Word/Google Docs/another site carries inline styles
+  // (fonts, sizes, colors) that override the editor's own CSS with higher
+  // specificity, so headings/paragraph formatting applied afterward looked
+  // like it wasn't taking effect. Stripping to plain text avoids that.
   const eContent = document.getElementById('eContent');
+  eContent.addEventListener('paste', e => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    if (!text) return;
+    const html = text.split(/\r?\n\r?\n/)
+      .map(para => `<p>${esc(para).replace(/\r?\n/g,'<br>')}</p>`)
+      .join('');
+    document.execCommand('insertHTML', false, html);
+  });
   eContent.addEventListener('dragover', e => { e.preventDefault(); });
   eContent.addEventListener('drop', async e => {
     e.preventDefault();
