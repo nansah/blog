@@ -2386,8 +2386,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Toolbar: format block
   document.getElementById('tbFormat').addEventListener('change',e=>{
-    const val = e.target.value;
-    if (val) { document.execCommand('formatBlock',false,val); document.getElementById('eContent').focus(); }
+    const val = e.target.value || 'P';
+    document.execCommand('formatBlock',false,val);
+    document.getElementById('eContent').focus();
     e.target.value='';
   });
 
