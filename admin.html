@@ -1331,13 +1331,20 @@ let editingPfId = null;
 let editingPrId = null;
 
 /* ── NAVIGATION ─────────────────────────────────────────── */
-async function nav(view, id=null) {
+// Pushes a browser history entry per CMS view so the back/forward buttons
+// move between admin screens (e.g. editor -> all posts) instead of
+// leaving the CMS entirely, since admin.html never does a real page load
+// between views.
+async function nav(view, id=null, { push=true }={}) {
   curView   = view;
   if (view === 'editor')         editingId = id;
   if (view === 'faveEditor')     editingFaveId = id;
   if (view === 'portfolioEditor') editingPfId = id;
   if (view === 'pressEditor')    editingPrId = id;
   try { localStorage.setItem('adminLastView', JSON.stringify({ view, id })); } catch {}
+  if (push) {
+    try { history.pushState({ view, id }, '', location.pathname + location.search); } catch {}
+  }
   document.querySelectorAll('.panel').forEach(p=>p.classList.add('hidden'));
   document.querySelectorAll('.sb-link[data-nav]').forEach(l=>l.classList.remove('active'));
   const panel = document.getElementById('panel'+view[0].toUpperCase()+view.slice(1));
@@ -2176,8 +2183,15 @@ async function enterApp() {
     const saved = JSON.parse(localStorage.getItem('adminLastView') || 'null');
     if (saved && saved.view) lastView = saved;
   } catch {}
-  nav(lastView.view, lastView.id);
+  try { history.replaceState({ view: lastView.view, id: lastView.id }, '', location.pathname + location.search); } catch {}
+  nav(lastView.view, lastView.id, { push:false });
 }
+
+// Browser back/forward moves between admin views instead of leaving the CMS.
+window.addEventListener('popstate', e => {
+  const state = e.state || { view: 'dashboard', id: null };
+  nav(state.view, state.id, { push:false });
+});
 
 document.addEventListener('DOMContentLoaded', async () => {
 
