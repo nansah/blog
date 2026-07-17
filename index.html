@@ -3,6 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    // Safety net: Supabase's dashboard-triggered "send password recovery"
+    // action always redirects to the project's Site URL (this homepage),
+    // ignoring any custom redirectTo — it can't be changed per-request
+    // from the dashboard. If a recovery token shows up here (as a URL
+    // fragment for the implicit flow, or a ?code= for PKCE), forward it
+    // to the page that actually knows how to handle it before anything
+    // else on this page loads.
+    (function () {
+      var hash = window.location.hash;
+      var hasCode = new URLSearchParams(window.location.search).has('code');
+      if (hash.indexOf('type=recovery') !== -1 || hasCode) {
+        window.location.replace('/reset-password' + window.location.search + hash);
+      }
+    })();
+  </script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-8YT12FMGMF"></script>
   <script>
