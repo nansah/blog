@@ -213,6 +213,9 @@
     .editor-body ul,.editor-body ol { padding-left: 22px; margin-bottom: 12px; }
     .editor-body li { margin-bottom: 4px; }
     .editor-body img { max-width: 100%; border-radius: 7px; margin: 10px 0; display: block; }
+    .editor-body video { max-width: 100%; border-radius: 7px; margin: 10px 0; display: block; }
+    .editor-body .video-embed { position: relative; padding-bottom: 56.25%; height: 0; margin: 14px 0; }
+    .editor-body .video-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 7px; }
     .editor-body a { color: var(--gold); text-decoration: underline; }
     .excerpt-ta { width: 100%; padding: 14px; border: none; resize: vertical; font-size: 13px; color: var(--muted); line-height: 1.7; outline: none; min-height: 80px; background: transparent; }
     .excerpt-ta::placeholder { color: #ccc; }
@@ -494,6 +497,7 @@
               <button class="tb" id="tbLink" title="Insert Link"><i class="fas fa-link"></i></button>
               <button class="tb" id="tbImg" title="Insert Image"><i class="fas fa-image"></i></button>
               <input type="file" id="tbImgFile" accept="image/*" multiple class="file-input" style="display:none;" />
+              <button class="tb" id="tbVideo" title="Insert Video"><i class="fas fa-video"></i></button>
               <button class="tb" id="tbHR" title="Divider"><i class="fas fa-minus"></i></button>
               <div class="tb-sep"></div>
               <button class="tb" data-cmd="undo" title="Undo"><i class="fas fa-undo"></i></button>
@@ -1063,6 +1067,27 @@
   </div>
 </div>
 
+<!-- ── INSERT VIDEO MODAL ── -->
+<div class="modal-bg hidden" id="videoModal">
+  <div class="modal">
+    <h3>Insert Video</h3>
+    <p>Paste a YouTube or Vimeo link (or a direct .mp4 link) to embed it, or upload a video file.</p>
+    <div class="meta-field" style="margin-bottom:14px;">
+      <span class="meta-lbl">Video URL</span>
+      <input type="text" class="meta-in" id="videoUrlInput" placeholder="https://youtube.com/watch?v=…" />
+    </div>
+    <button class="btn btn-primary btn-sm" id="btnVideoEmbedUrl" style="width:100%;justify-content:center;margin-bottom:16px;">Embed from URL</button>
+    <div style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:16px;">or</div>
+    <div class="meta-field">
+      <span class="meta-lbl">Upload a video file</span>
+      <input type="file" id="videoFileInput" accept="video/*" class="file-input" />
+    </div>
+    <div class="modal-btns" style="margin-top:20px;">
+      <button class="btn btn-outline" id="btnVideoCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="supabase-client.js"></script>
 <script>
@@ -1151,6 +1176,41 @@ async function uploadImageFile(file) {
   if (error) { toast('Upload failed: ' + error.message, 'error'); return null; }
   const { data } = supabaseClient.storage.from('images').getPublicUrl(path);
   return data.publicUrl;
+}
+
+// Uploads to a separate 'videos' Storage bucket (not 'images') since video
+// files are much larger and don't benefit from the image compression path.
+async function uploadVideoFile(file) {
+  const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+  const path = `${uid()}.${ext}`;
+  const { error } = await supabaseClient.storage.from('videos').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  });
+  if (error) { toast('Video upload failed: ' + error.message, 'error'); return null; }
+  const { data } = supabaseClient.storage.from('videos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// Recognizes YouTube/Vimeo links and returns a responsive iframe embed, or
+// a direct <video> tag for a plain video file URL. Returns null if the URL
+// doesn't match any of those, so the caller can show an error instead of
+// inserting something broken.
+function parseVideoEmbedUrl(url) {
+  url = (url || '').trim();
+  if (!url) return null;
+  let m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/);
+  if (m) {
+    return `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${m[1]}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+  }
+  m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (m) {
+    return `<div class="video-embed"><iframe src="https://player.vimeo.com/video/${m[1]}" title="Vimeo video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+  }
+  if (/^https?:\/\/.+\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url)) {
+    return `<video controls preload="metadata" style="width:100%;border-radius:8px;"><source src="${esc(url)}" /></video>`;
+  }
+  return null;
 }
 
 /* ── FOCAL POINT PICKER (featured images, press thumbnails) ────────────── */
@@ -2876,6 +2936,56 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (url) { document.execCommand('insertImage', false, url); inserted++; }
     }
     if (files.length>1) toast(`${inserted} of ${files.length} images added`, inserted===files.length?'success':'warning');
+    e.target.value = '';
+  });
+
+  // Toolbar: insert video — same selection-preservation approach as the
+  // image button, since opening the modal/file picker steals focus from
+  // the content-editable body.
+  let savedVideoRange = null;
+  function restoreVideoSelection() {
+    const eContentEl = document.getElementById('eContent');
+    eContentEl.focus();
+    if (savedVideoRange) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedVideoRange);
+    }
+  }
+  document.getElementById('tbVideo').addEventListener('mousedown', e => {
+    e.preventDefault();
+    const sel = window.getSelection();
+    const eContentEl = document.getElementById('eContent');
+    if (sel && sel.rangeCount && eContentEl.contains(sel.anchorNode)) {
+      savedVideoRange = sel.getRangeAt(0).cloneRange();
+    }
+    document.getElementById('videoUrlInput').value = '';
+    document.getElementById('videoModal').classList.remove('hidden');
+    document.getElementById('videoUrlInput').focus();
+  });
+  document.getElementById('btnVideoCancel').addEventListener('click', () => {
+    document.getElementById('videoModal').classList.add('hidden');
+  });
+  document.getElementById('btnVideoEmbedUrl').addEventListener('click', () => {
+    const url = document.getElementById('videoUrlInput').value.trim();
+    if (!url) { toast('Enter a video URL', 'warning'); return; }
+    const html = parseVideoEmbedUrl(url);
+    if (!html) { toast('Could not recognize that URL — try a YouTube/Vimeo link or a direct .mp4 link.', 'error'); return; }
+    document.getElementById('videoModal').classList.add('hidden');
+    restoreVideoSelection();
+    document.execCommand('insertHTML', false, html);
+  });
+  document.getElementById('videoUrlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnVideoEmbedUrl').click(); }
+  });
+  document.getElementById('videoFileInput').addEventListener('change', async e => {
+    const file = e.target.files[0]; if (!file) return;
+    document.getElementById('videoModal').classList.add('hidden');
+    restoreVideoSelection();
+    toast('Uploading video…', 'success');
+    const url = await uploadVideoFile(file);
+    if (!url) return;
+    document.execCommand('insertHTML', false, `<video controls preload="metadata" style="width:100%;border-radius:8px;"><source src="${esc(url)}" /></video>`);
     e.target.value = '';
   });
 
