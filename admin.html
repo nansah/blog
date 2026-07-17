@@ -340,6 +340,7 @@
       <button class="sb-link active" data-nav="dashboard"><i class="fas fa-chart-bar"></i> Dashboard</button>
       <button class="sb-link" data-nav="posts"><i class="fas fa-file-alt"></i> All Posts</button>
       <button class="sb-link" data-nav="editor"><i class="fas fa-plus-circle"></i> New Post</button>
+      <a href="/" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
       <div class="sb-section">Shop</div>
       <button class="sb-link" data-nav="faves"><i class="fas fa-heart"></i> Shop My Faves</button>
       <button class="sb-link" data-nav="faveEditor"><i class="fas fa-plus-circle"></i> New Fave</button>
@@ -353,7 +354,6 @@
       <button class="sb-link" data-nav="portfolio"><i class="fas fa-images"></i> Past Collaborations</button>
       <button class="sb-link" data-nav="press"><i class="fas fa-newspaper"></i> Press Features</button>
       <button class="sb-link" data-nav="sidebar"><i class="fas fa-grip-lines"></i> Post Sidebar</button>
-      <a href="/" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
     </nav>
     <div class="sb-bottom">
       <div class="sb-user">
@@ -950,9 +950,10 @@
           <div class="s-card">
             <div class="e-section-label" style="padding:14px 20px 0;"><i class="fas fa-heart"></i> Faves Block</div>
             <div class="s-body">
-              <div class="s-field"><label class="s-lbl">Image URL</label><input type="text" class="s-in" id="fbImage" placeholder="https://…" /></div>
+              <p style="font-size:12px;color:var(--muted);margin:0 0 4px;">Shows up to 4 of your published <a href="#" onclick="nav('faves');return false;">Shop My Faves</a> items automatically (whatever's live there, in that page's sort order) &mdash; nothing to manage here. The fields below only control the optional banner image, intro text, and "Shop Now" link around them.</p>
+              <div class="s-field"><label class="s-lbl">Banner Image URL (optional)</label><input type="text" class="s-in" id="fbImage" placeholder="https://…" /></div>
               <div class="s-field"><label class="s-lbl">Or upload</label><input type="file" id="fbImageFile" accept="image/*" class="file-input" /></div>
-              <div class="s-field"><label class="s-lbl">Text</label><input type="text" class="s-in" id="fbText" placeholder="My go-to products and picks…" /></div>
+              <div class="s-field"><label class="s-lbl">Intro Text</label><input type="text" class="s-in" id="fbText" placeholder="My go-to products and picks…" /></div>
               <div class="s-field"><label class="s-lbl">Link Text</label><input type="text" class="s-in" id="fbLinkText" placeholder="Shop Now" /></div>
               <div class="s-field"><label class="s-lbl">Link URL</label><input type="text" class="s-in" id="fbLinkUrl" placeholder="/faves" /></div>
               <button class="btn btn-primary btn-sm" style="align-self:flex-start;" id="btnSaveFavesBlock">Save Faves Block</button>
