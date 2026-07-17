@@ -483,7 +483,7 @@
               <div class="tb-sep"></div>
               <button class="tb" id="tbLink" title="Insert Link"><i class="fas fa-link"></i></button>
               <button class="tb" id="tbImg" title="Insert Image"><i class="fas fa-image"></i></button>
-              <input type="file" id="tbImgFile" accept="image/*" class="file-input" style="display:none;" />
+              <input type="file" id="tbImgFile" accept="image/*" multiple class="file-input" style="display:none;" />
               <button class="tb" id="tbHR" title="Divider"><i class="fas fa-minus"></i></button>
               <div class="tb-sep"></div>
               <button class="tb" data-cmd="undo" title="Undo"><i class="fas fa-undo"></i></button>
@@ -2726,7 +2726,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('tbImgFile').click();
   });
   document.getElementById('tbImgFile').addEventListener('change', async e=>{
-    const file = e.target.files[0]; if(!file) return;
+    const files = Array.from(e.target.files || []); if(!files.length) return;
     const eContentEl = document.getElementById('eContent');
     eContentEl.focus();
     if (savedImageRange) {
@@ -2734,10 +2734,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       sel.removeAllRanges();
       sel.addRange(savedImageRange);
     }
-    toast('Uploading image…','success');
-    const url = await uploadImageFile(file);
-    if (!url) return;
-    document.execCommand('insertImage', false, url);
+    toast(files.length>1?`Uploading ${files.length} images…`:'Uploading image…','success');
+    // Uploaded and inserted one at a time, in order — each insertImage
+    // call moves the cursor to just after the new image, so looping
+    // stacks them in the order they were picked.
+    let inserted = 0;
+    for (const file of files) {
+      const url = await uploadImageFile(file);
+      if (url) { document.execCommand('insertImage', false, url); inserted++; }
+    }
+    if (files.length>1) toast(`${inserted} of ${files.length} images added`, inserted===files.length?'success':'warning');
     e.target.value = '';
   });
 
@@ -2759,10 +2765,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   eContent.addEventListener('dragover', e => { e.preventDefault(); });
   eContent.addEventListener('drop', async e => {
     e.preventDefault();
-    const file = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (!file || !file.type.startsWith('image/')) return;
+    const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
 
-    // Move the caret to the drop point so the image lands where it was dropped.
+    // Move the caret to the drop point so the images land where they were dropped.
     let range = null;
     if (document.caretRangeFromPoint) {
       range = document.caretRangeFromPoint(e.clientX, e.clientY);
@@ -2777,10 +2783,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     eContent.focus();
-    toast('Uploading image…','success');
-    const url = await uploadImageFile(file);
-    if (!url) return;
-    document.execCommand('insertImage', false, url);
+    toast(files.length>1?`Uploading ${files.length} images…`:'Uploading image…','success');
+    let inserted = 0;
+    for (const file of files) {
+      const url = await uploadImageFile(file);
+      if (url) { document.execCommand('insertImage', false, url); inserted++; }
+    }
+    if (files.length>1) toast(`${inserted} of ${files.length} images added`, inserted===files.length?'success':'warning');
   });
 
   // Toolbar: HR
