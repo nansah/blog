@@ -534,7 +534,10 @@
 
           <!-- Excerpt -->
           <div class="e-card">
-            <div class="e-section-label">Excerpt</div>
+            <div class="e-section-label" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>Excerpt</span>
+              <button type="button" class="btn btn-outline btn-sm" id="btnRegenExcerpt" style="text-transform:none;letter-spacing:normal;font-weight:600;">Regenerate from content</button>
+            </div>
             <textarea id="eExcerpt" class="excerpt-ta" placeholder="Short summary for post cards (auto-generated from content if left empty)…"></textarea>
           </div>
         </div>
@@ -2679,6 +2682,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const wc = wordCount(document.getElementById('eContent').innerHTML);
     const mins = Math.max(1,Math.ceil(wc/200));
     document.getElementById('eReadTime').value = `${mins} min read`;
+  });
+
+  // Editor: regenerate excerpt from current content. The excerpt only
+  // auto-fills from content when the field is blank (see
+  // collectEditorData) — once a post has been saved once, its excerpt
+  // is no longer blank, so later content rewrites won't refresh it on
+  // their own. This lets you pull a fresh one on demand instead.
+  document.getElementById('btnRegenExcerpt').addEventListener('click',()=>{
+    const text = stripHtml(document.getElementById('eContent').innerHTML).slice(0,180).trim();
+    if (!text) { toast('Add some content first.','warning'); return; }
+    document.getElementById('eExcerpt').value = text;
+    scheduleAutosave();
   });
 
   // Fave editor: status change
