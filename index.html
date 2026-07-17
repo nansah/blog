@@ -224,7 +224,20 @@
         <a href="/blog" class="see-all-link">All Posts <i class="fas fa-arrow-right"></i></a>
       </div>
 
-      <div class="posts-grid"></div>
+      <div class="posts-grid" id="postsGrid">
+        <!-- Skeleton placeholders reserve this grid's real space (same
+             markup/classes as loaded cards, so sizing matches exactly at
+             every breakpoint) until renderRemotePosts() in script.js
+             swaps them for actual posts. Without them the grid starts at
+             zero height and the whole page below it jumps once the
+             Supabase fetch resolves — a major cause of layout shift. -->
+        <div class="post-card post-card-skeleton" aria-hidden="true"><div class="post-img-wrap skeleton-shimmer"></div><div class="post-body"><div class="skeleton-bar" style="width:70px;height:9px;"></div><div class="skeleton-bar" style="width:92%;height:17px;margin-top:6px;"></div><div class="skeleton-bar" style="width:60%;height:17px;"></div><div class="skeleton-bar" style="width:50%;height:11px;margin-top:10px;"></div></div></div>
+        <div class="post-card post-card-skeleton" aria-hidden="true"><div class="post-img-wrap skeleton-shimmer"></div><div class="post-body"><div class="skeleton-bar" style="width:70px;height:9px;"></div><div class="skeleton-bar" style="width:92%;height:17px;margin-top:6px;"></div><div class="skeleton-bar" style="width:60%;height:17px;"></div><div class="skeleton-bar" style="width:50%;height:11px;margin-top:10px;"></div></div></div>
+        <div class="post-card post-card-skeleton" aria-hidden="true"><div class="post-img-wrap skeleton-shimmer"></div><div class="post-body"><div class="skeleton-bar" style="width:70px;height:9px;"></div><div class="skeleton-bar" style="width:92%;height:17px;margin-top:6px;"></div><div class="skeleton-bar" style="width:60%;height:17px;"></div><div class="skeleton-bar" style="width:50%;height:11px;margin-top:10px;"></div></div></div>
+        <div class="post-card post-card-skeleton" aria-hidden="true"><div class="post-img-wrap skeleton-shimmer"></div><div class="post-body"><div class="skeleton-bar" style="width:70px;height:9px;"></div><div class="skeleton-bar" style="width:92%;height:17px;margin-top:6px;"></div><div class="skeleton-bar" style="width:60%;height:17px;"></div><div class="skeleton-bar" style="width:50%;height:11px;margin-top:10px;"></div></div></div>
+        <div class="post-card post-card-skeleton" aria-hidden="true"><div class="post-img-wrap skeleton-shimmer"></div><div class="post-body"><div class="skeleton-bar" style="width:70px;height:9px;"></div><div class="skeleton-bar" style="width:92%;height:17px;margin-top:6px;"></div><div class="skeleton-bar" style="width:60%;height:17px;"></div><div class="skeleton-bar" style="width:50%;height:11px;margin-top:10px;"></div></div></div>
+        <div class="post-card post-card-skeleton" aria-hidden="true"><div class="post-img-wrap skeleton-shimmer"></div><div class="post-body"><div class="skeleton-bar" style="width:70px;height:9px;"></div><div class="skeleton-bar" style="width:92%;height:17px;margin-top:6px;"></div><div class="skeleton-bar" style="width:60%;height:17px;"></div><div class="skeleton-bar" style="width:50%;height:11px;margin-top:10px;"></div></div></div>
+      </div>
 
       <div style="text-align:center; margin-top:48px;">
         <a href="/blog" class="btn btn-dark">View All Posts <i class="fas fa-arrow-right"></i></a>

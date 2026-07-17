@@ -352,6 +352,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   if (isHome) query = query.limit(6);
 
   const { data: relevant, error } = await query;
+  // Skeleton placeholders (index.html only — no-op elsewhere) reserved
+  // this grid's space so the page below it didn't jump once this fetch
+  // resolved; clear them regardless of outcome so a failed/empty fetch
+  // doesn't leave them shimmering forever.
+  grid.querySelectorAll('.post-card-skeleton').forEach(el => el.remove());
   if (error || !relevant || !relevant.length) return;
 
   const fmtDate = iso => {
