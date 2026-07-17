@@ -105,6 +105,8 @@
     .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 26px; height: 58px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 10; box-shadow: var(--sh); }
     .topbar-crumb { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 12px; }
     .mobile-menu-btn { display: none; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 7px; border: 1px solid var(--border); background: var(--white); cursor: pointer; font-size: 14px; color: var(--black); flex-shrink: 0; }
+    .topbar-back-btn { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px; border: none; background: transparent; cursor: pointer; font-size: 13px; color: var(--muted); flex-shrink: 0; }
+    .topbar-back-btn:hover { background: var(--content-bg); color: var(--black); }
     .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 150; }
     .sidebar-backdrop.show { display: block; }
     .topbar-crumb strong { color: var(--black); }
@@ -193,6 +195,12 @@
     }
     .floating-toolbar .tb:hover, .floating-toolbar .tb.on { background: rgba(255,255,255,0.18); }
     .floating-toolbar .tb-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.2); margin: 0 3px; }
+    .floating-toolbar .tb-sel {
+      height: 30px; border: none; border-radius: 5px; background: transparent; color: #fff;
+      font-size: 12px; padding: 0 4px 0 7px; cursor: pointer; outline: none;
+    }
+    .floating-toolbar .tb-sel:hover { background: rgba(255,255,255,0.18); }
+    .floating-toolbar .tb-sel option { color: var(--black); }
     .editor-body {
       min-height: 360px; padding: 22px; outline: none;
       font-size: 15px; line-height: 1.78; color: var(--black);
@@ -232,6 +240,7 @@
     }
     .focal-picker-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
     .status-ind { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+    .autosave-ind { font-size: 11px; color: var(--muted); min-height: 14px; margin-top: -6px; }
     .s-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .s-dot.published { background: var(--success); }
     .s-dot.draft { background: var(--warning); }
@@ -410,6 +419,7 @@
     <div class="topbar">
       <div class="topbar-crumb">
         <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        <button class="topbar-back-btn hidden" id="topbarBackBtn" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
         <span id="topbarLabel"><strong>Dashboard</strong></span>
       </div>
       <div class="topbar-right">
@@ -496,6 +506,14 @@
 
           <!-- Floating toolbar: pops up at the selection so you don't have to scroll to the top bar -->
           <div class="floating-toolbar hidden" id="floatingToolbar">
+            <select class="tb-sel" id="floatingFormat" title="Format">
+              <option value="">Paragraph</option>
+              <option value="H1">Heading 1</option>
+              <option value="H2">Heading 2</option>
+              <option value="H3">Heading 3</option>
+              <option value="BLOCKQUOTE">Blockquote</option>
+            </select>
+            <div class="tb-sep"></div>
             <button class="tb" data-fcmd="bold" title="Bold"><i class="fas fa-bold"></i></button>
             <button class="tb" data-fcmd="italic" title="Italic"><i class="fas fa-italic"></i></button>
             <button class="tb" data-fcmd="underline" title="Underline"><i class="fas fa-underline"></i></button>
@@ -525,6 +543,7 @@
             <div class="meta-head">Publish</div>
             <div class="meta-body">
               <div class="status-ind"><div class="s-dot draft" id="sDot"></div><span id="sLabel">Draft</span></div>
+              <div class="autosave-ind" id="autosaveInd"></div>
               <div class="meta-field">
                 <span class="meta-lbl">Status</span>
                 <select class="meta-sel" id="eStatus"><option value="draft">Draft</option><option value="published">Published</option></select>
@@ -1452,6 +1471,8 @@ let editingPrId = null;
 // leaving the CMS entirely, since admin.html never does a real page load
 // between views.
 async function nav(view, id=null, { push=true }={}) {
+  clearTimeout(autosaveTimer);
+  autosaveGeneration++;
   curView   = view;
   if (view === 'editor')         editingId = id;
   if (view === 'faveEditor')     editingFaveId = id;
@@ -1469,6 +1490,13 @@ async function nav(view, id=null, { push=true }={}) {
   if (link) link.classList.add('active');
   const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration',press:'Press Features',pressEditor:id?'Edit Feature':'New Feature',sidebar:'Post Sidebar'};
   document.getElementById('topbarLabel').innerHTML = `<strong>${labels[view]||view}</strong>`;
+  // Sub-views (editors) get a visible back arrow to their list view —
+  // handy on mobile, where the sidebar nav is tucked behind the
+  // hamburger menu rather than always on screen.
+  const backTargets = { editor:'posts', faveEditor:'faves', portfolioEditor:'portfolio', pressEditor:'press' };
+  const backBtn = document.getElementById('topbarBackBtn');
+  if (backTargets[view]) { backBtn.classList.remove('hidden'); backBtn.dataset.target = backTargets[view]; }
+  else { backBtn.classList.add('hidden'); }
   if (view==='dashboard')        await renderDashboard();
   if (view==='posts')            await renderPostsTable();
   if (view==='editor')           await initEditor(id);
@@ -2045,6 +2073,7 @@ function renderSidebarBlockList(blocks) {
 
 /* ── EDITOR ─────────────────────────────────────────────── */
 async function initEditor(postId) {
+  document.getElementById('autosaveInd').textContent = '';
   // Reset fields
   const now = isoToNYDatetimeLocal(new Date().toISOString());
   document.getElementById('eTitle').value    = '';
@@ -2133,6 +2162,9 @@ function previewPost() {
 async function savePost(status) {
   const data = collectEditorData(status);
   if (!data.title) { toast('Add a title before saving.','warning'); return; }
+  clearTimeout(autosaveTimer);
+  autosaveGeneration++;
+  document.getElementById('autosaveInd').textContent = '';
   if (editingId) {
     await DB.updatePost(editingId, data);
     toast(`Post ${status==='published'?'published':'saved'}!`, 'success');
@@ -2145,6 +2177,52 @@ async function savePost(status) {
   document.getElementById('btnDelete').classList.remove('hidden');
   setStatusUI(status);
   document.getElementById('eStatus').value = status;
+}
+
+/* ── AUTOSAVE ───────────────────────────────────────────── */
+// Debounced background save while writing, so content isn't lost to a
+// closed tab or crashed browser. Keeps whatever status is currently
+// selected (draft/published) rather than forcing one — it's just
+// persisting what's already on screen, not a publish action.
+let autosaveTimer = null;
+let autosaveInFlight = false;
+let autosaveGeneration = 0;
+
+function scheduleAutosave() {
+  if (curView !== 'editor') return;
+  clearTimeout(autosaveTimer);
+  document.getElementById('autosaveInd').textContent = '';
+  autosaveTimer = setTimeout(autosavePost, 2500);
+}
+
+async function autosavePost() {
+  if (curView !== 'editor' || autosaveInFlight) return;
+  const data = collectEditorData(document.getElementById('eStatus').value);
+  if (!data.title) return; // nothing worth saving yet
+
+  const gen = ++autosaveGeneration;
+  autosaveInFlight = true;
+  const ind = document.getElementById('autosaveInd');
+  ind.textContent = 'Saving…';
+  try {
+    if (editingId) {
+      await DB.updatePost(editingId, data);
+    } else {
+      const p = await DB.createPost(data);
+      if (p) { editingId = p.id; document.getElementById('btnDelete').classList.remove('hidden'); }
+    }
+    // A newer autosave (or a manual Publish/Save Draft) may have started
+    // and finished while this request was in flight — don't let a stale
+    // response overwrite a fresher "Saved" timestamp.
+    if (gen === autosaveGeneration) {
+      const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      ind.textContent = `Autosaved ${time}`;
+    }
+  } catch {
+    if (gen === autosaveGeneration) ind.textContent = 'Autosave failed';
+  } finally {
+    autosaveInFlight = false;
+  }
 }
 
 /* ── IMPORT ─────────────────────────────────────────────── */
@@ -2430,6 +2508,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     sidebarEl.classList.remove('open');
     sidebarBackdrop.classList.remove('show');
   }
+  document.getElementById('topbarBackBtn').addEventListener('click', e=>{
+    const target = e.currentTarget.dataset.target;
+    if (target) nav(target);
+  });
   document.getElementById('mobileMenuBtn').addEventListener('click', ()=>{
     sidebarEl.classList.add('open');
     sidebarBackdrop.classList.add('show');
@@ -2449,6 +2531,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Editor: status change
   document.getElementById('eStatus').addEventListener('change',e=>setStatusUI(e.target.value));
+
+  // Editor: autosave — any edit to the post's fields schedules a debounced
+  // background save (see scheduleAutosave/autosavePost above).
+  ['eTitle','eSlug','eContent','eExcerpt','eCat','eTags','eImgUrl','eReadTime','eDate'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', scheduleAutosave);
+  });
+  ['eStatus','eFeatured'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', scheduleAutosave);
+  });
 
   // Editor: publish/draft buttons
   document.getElementById('btnPublish').addEventListener('click',()=>savePost('published'));
@@ -2676,21 +2769,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Toolbar: format block
+  // Toolbar: format block (shared by the fixed toolbar's dropdown and the
+  // floating selection toolbar's dropdown — same fields, same fix).
   // Clicking the <select> moves browser focus off eContent before 'change'
   // fires, which collapses/clears the text selection — so formatBlock had
   // nothing to act on. Save the range on mousedown (before focus moves)
   // and restore it once eContent is refocused.
   let savedFormatRange = null;
-  document.getElementById('tbFormat').addEventListener('mousedown',()=>{
+  function saveFormatRange() {
     const sel = window.getSelection();
     const eContentEl = document.getElementById('eContent');
     if (sel && sel.rangeCount && eContentEl.contains(sel.anchorNode)) {
       savedFormatRange = sel.getRangeAt(0).cloneRange();
     }
-  });
-  document.getElementById('tbFormat').addEventListener('change',e=>{
-    const val = e.target.value || 'P';
+  }
+  function applyFormatBlock(val) {
+    const tag = val || 'P';
     const eContentEl = document.getElementById('eContent');
     eContentEl.focus();
     if (savedFormatRange) {
@@ -2700,7 +2794,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     // Angle-bracket form ('<p>' not 'P') is required by Safari/WebKit;
     // Chrome/Firefox accept both, so this is the safe cross-browser form.
-    document.execCommand('formatBlock',false,`<${val}>`);
+    document.execCommand('formatBlock',false,`<${tag}>`);
+  }
+  ['tbFormat','floatingFormat'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.addEventListener('mousedown', saveFormatRange);
+    el.addEventListener('change', e=>applyFormatBlock(e.target.value));
   });
 
   // Toolbar: link
@@ -2818,6 +2917,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // actually in (Heading 1/2/3 or Paragraph), instead of always
   // snapping back to "Paragraph" after a format is applied.
   const tbFormat = document.getElementById('tbFormat');
+  const floatingFormat = document.getElementById('floatingFormat');
   function updateFormatSelect() {
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount || !eContent.contains(sel.anchorNode)) return;
@@ -2825,6 +2925,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
     const block = node && node.closest ? node.closest('h1,h2,h3') : null;
     tbFormat.value = block ? block.tagName : '';
+    floatingFormat.value = block ? block.tagName : '';
   }
   document.addEventListener('selectionchange', updateFormatSelect);
   eContent.addEventListener('blur', () => {
@@ -2851,6 +2952,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const selText = window.getSelection().toString();
     const url = prompt('URL:', selText.startsWith('http') ? selText : 'https://');
     if (url) document.execCommand('createLink', false, url);
+  });
+
+  // Ctrl/Cmd+B/I/U for bold/italic/underline. Most browsers already do
+  // this natively in a contenteditable, but that's inconsistent (Safari
+  // in particular), so it's made explicit to match the reliability of
+  // the toolbar buttons.
+  eContent.addEventListener('keydown', e => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    const cmd = { b: 'bold', i: 'italic', u: 'underline' }[e.key.toLowerCase()];
+    if (!cmd) return;
+    e.preventDefault();
+    document.execCommand(cmd, false, null);
   });
 
   // Toolbar: HTML source toggle
