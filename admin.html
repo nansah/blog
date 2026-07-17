@@ -92,9 +92,12 @@
     .sb-role { font-size: 10px; color: rgba(255,255,255,.32); }
 
     /* ── MAIN ── */
-    .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-width: 0; }
     .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 26px; height: 58px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 10; box-shadow: var(--sh); }
-    .topbar-crumb { font-size: 13px; color: var(--muted); }
+    .topbar-crumb { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 12px; }
+    .mobile-menu-btn { display: none; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 7px; border: 1px solid var(--border); background: var(--white); cursor: pointer; font-size: 14px; color: var(--black); flex-shrink: 0; }
+    .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 150; }
+    .sidebar-backdrop.show { display: block; }
     .topbar-crumb strong { color: var(--black); }
     .topbar-right { display: flex; align-items: center; gap: 10px; }
     .panel { flex: 1; padding: 28px 26px; }
@@ -297,10 +300,30 @@
       .stats-row { grid-template-columns: repeat(2,1fr); }
       .import-grid { grid-template-columns: 1fr; }
       .settings-grid { grid-template-columns: 1fr; }
+
+      /* Sidebar becomes an off-canvas drawer, toggled by the topbar
+         hamburger button, instead of permanently squeezing the content
+         area — a fixed 200px+ sidebar left almost nothing to write in
+         on a phone-width screen. */
+      .mobile-menu-btn { display: flex; }
+      .sidebar {
+        position: fixed; top: 0; left: 0; height: 100%; width: 250px;
+        z-index: 200; transform: translateX(-100%);
+        transition: transform .22s ease;
+      }
+      .sidebar.open { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,.35); }
     }
     @media (max-width: 640px) {
-      .sidebar { width: 200px; }
+      .panel { padding: 18px 14px; }
+      .topbar { padding: 0 14px; }
       .stats-row { grid-template-columns: 1fr 1fr; }
+      .meta-sb { flex-direction: column; }
+      .meta-card { min-width: 0; }
+      .editor-title { font-size: 21px; }
+      .e-card-pad { padding: 14px; }
+      .table-wrap { overflow-x: auto; }
+      table { min-width: 520px; }
+      .settings-grid { max-width: none; }
     }
   </style>
 </head>
@@ -328,6 +351,7 @@
 
 <!-- ══ APP ════════════════════════════════════════════════ -->
 <div id="appScreen" class="app hidden">
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -372,7 +396,10 @@
 
     <!-- TOPBAR -->
     <div class="topbar">
-      <div class="topbar-crumb"><span id="topbarLabel"><strong>Dashboard</strong></span></div>
+      <div class="topbar-crumb">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        <span id="topbarLabel"><strong>Dashboard</strong></span>
+      </div>
       <div class="topbar-right">
         <button class="btn btn-gold btn-sm" data-nav="editor"><i class="fas fa-plus"></i> New Post</button>
       </div>
@@ -2362,6 +2389,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Sidebar + topbar nav
   document.querySelectorAll('[data-nav]').forEach(el=>{
     el.addEventListener('click',()=>nav(el.dataset.nav));
+  });
+
+  // Mobile: sidebar opens as an off-canvas drawer via the hamburger
+  // button, and closes on backdrop tap or after picking a nav item.
+  const sidebarEl = document.querySelector('.sidebar');
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+  function closeMobileSidebar() {
+    sidebarEl.classList.remove('open');
+    sidebarBackdrop.classList.remove('show');
+  }
+  document.getElementById('mobileMenuBtn').addEventListener('click', ()=>{
+    sidebarEl.classList.add('open');
+    sidebarBackdrop.classList.add('show');
+  });
+  sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+  sidebarEl.querySelectorAll('[data-nav], a').forEach(el=>{
+    el.addEventListener('click', closeMobileSidebar);
   });
 
   // Logout
