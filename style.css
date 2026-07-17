@@ -930,7 +930,9 @@ body.search-open {
 .newsletter-form {
   display: flex; flex-wrap: wrap; gap: 12px; max-width: 500px; margin: 0 auto 16px;
 }
-.newsletter-form .cf-turnstile { flex-basis: 100%; display: flex; justify-content: center; }
+/* Reserves the Turnstile widget's rendered size before its script runs,
+   so it doesn't shift the subscribe button down once it loads (CLS). */
+.newsletter-form .cf-turnstile { flex-basis: 100%; display: flex; justify-content: center; min-height: 65px; }
 .newsletter-input {
   flex: 1; background: var(--white); border: 1.5px solid var(--border);
   outline: none; padding: 15px 20px;
@@ -1793,6 +1795,10 @@ body.search-open {
 .elfsight-app-163154fa-e873-4528-8de5-aba4184f381c [class*="PoweredBy"] {
   display: none !important;
 }
+/* Reserves roughly the widget's rendered height before its script has
+   loaded/injected the actual feed, which otherwise shoves the footer
+   down once it appears — a major cause of layout shift on this page. */
+.elfsight-app-163154fa-e873-4528-8de5-aba4184f381c { display: block; min-height: 420px; }
 
 /* ============================================
    LEGAL PAGES (Privacy, Terms, Disclosure, Cookies)

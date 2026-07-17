@@ -44,6 +44,7 @@
   <meta name="twitter:image" content="https://nanayaaansah.com/images/IMG_5910.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://qjhdkfygwsmtnjuxgork.supabase.co" />
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Jost:wght@300;400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
   <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript>
@@ -51,6 +52,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   </noscript>
   <link rel="stylesheet" href="style.css" />
+  <!-- Loaded early with defer (rather than at the end of body) so the
+       browser starts fetching them in parallel with HTML parsing —
+       defer still guarantees they run in order, after the DOM is
+       ready, so nothing about when the code executes changes. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script defer src="supabase-client.js"></script>
+  <script defer src="script.js"></script>
 </head>
 <body>
 
@@ -94,6 +102,8 @@
       <a href="/contact">Contact</a>
     </div>
   </header>
+
+  <main>
 
   <!-- ==============================
        HERO / ABOUT INTRO
@@ -293,6 +303,8 @@
     </div>
   </section>
 
+  </main>
+
   <!-- ==============================
        FOOTER
   ============================== -->
@@ -356,9 +368,6 @@
     <i class="fas fa-arrow-up"></i>
   </button>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="supabase-client.js"></script>
-  <script src="script.js"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script src="https://elfsightcdn.com/platform.js" async></script>
 </body>
