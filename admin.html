@@ -1104,11 +1104,44 @@ function nyDatetimeLocalToISO(dtLocalStr) {
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const wordCount = html => stripHtml(html).split(/\s+/).filter(Boolean).length;
 
+// Downscales/recompresses an image client-side before upload — phone
+// photos routinely come in at 3000px+ and several MB, which is far more
+// than any layout on this site displays at. Skips GIFs (would destroy
+// animation) and anything already small enough that re-encoding wouldn't
+// help. Falls back to the original file untouched if anything goes wrong
+// or if the "compressed" result isn't actually smaller.
+async function compressImageFile(file, { maxDim = 2000, quality = 0.85 } = {}) {
+  if (!file.type || !file.type.startsWith('image/') || file.type === 'image/gif') return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.type !== 'image/png') { bitmap.close?.(); return file; }
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+    // PNGs stay PNG (some are transparency-dependent, e.g. logos/graphics);
+    // everything else re-encodes as JPEG, which compresses photos far
+    // better than their original format usually does.
+    const outType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, outType, quality));
+    if (!blob || blob.size >= file.size) return file;
+    const ext = outType === 'image/png' ? 'png' : 'jpg';
+    const name = file.name.replace(/\.[^.]+$/, '') + '.' + ext;
+    return new File([blob], name, { type: outType });
+  } catch {
+    return file;
+  }
+}
+
 /* ── IMAGE UPLOADS (real file storage, not base64-in-database) ──────────── */
 // Uploads to the 'images' Supabase Storage bucket and returns a short public
 // URL. Embedding whole images as base64 text directly in the database
 // silently truncates/corrupts large files, so every uploader uses this.
 async function uploadImageFile(file) {
+  file = await compressImageFile(file);
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
   const path = `${uid()}.${ext}`;
   const { error } = await supabaseClient.storage.from('images').upload(path, file, {
