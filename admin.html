@@ -480,6 +480,7 @@
               <div class="tb-sep"></div>
               <button class="tb" id="tbLink" title="Insert Link"><i class="fas fa-link"></i></button>
               <button class="tb" id="tbImg" title="Insert Image"><i class="fas fa-image"></i></button>
+              <input type="file" id="tbImgFile" accept="image/*" class="file-input" style="display:none;" />
               <button class="tb" id="tbHR" title="Divider"><i class="fas fa-minus"></i></button>
               <div class="tb-sep"></div>
               <button class="tb" data-cmd="undo" title="Undo"><i class="fas fa-undo"></i></button>
@@ -2689,11 +2690,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (url) { document.execCommand('createLink',false,url); }
   });
 
-  // Toolbar: insert image
+  // Toolbar: insert image — opens the file picker (upload) rather than
+  // prompting for a URL. Opening the picker steals focus/selection from
+  // the content-editable body, so the caret position is saved on
+  // mousedown (before that happens) and restored once a file is chosen.
+  let savedImageRange = null;
   document.getElementById('tbImg').addEventListener('mousedown',e=>{
     e.preventDefault();
-    const url = prompt('Image URL:','https://');
-    if (url) { document.execCommand('insertImage',false,url); }
+    const sel = window.getSelection();
+    const eContentEl = document.getElementById('eContent');
+    if (sel && sel.rangeCount && eContentEl.contains(sel.anchorNode)) {
+      savedImageRange = sel.getRangeAt(0).cloneRange();
+    }
+    document.getElementById('tbImgFile').click();
+  });
+  document.getElementById('tbImgFile').addEventListener('change', async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    const eContentEl = document.getElementById('eContent');
+    eContentEl.focus();
+    if (savedImageRange) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedImageRange);
+    }
+    toast('Uploading image…','success');
+    const url = await uploadImageFile(file);
+    if (!url) return;
+    document.execCommand('insertImage', false, url);
+    e.target.value = '';
   });
 
   // Editor body: paste as plain text, reflowed into paragraphs. Pasting
