@@ -2351,6 +2351,11 @@ function previewPost() {
 }
 
 async function savePost(status) {
+  // Let any in-flight autosave finish writing first — otherwise it could
+  // complete after this save and silently overwrite it with older
+  // content (see the note on autosaveInFlightPromise above).
+  if (autosaveInFlightPromise) await autosaveInFlightPromise;
+
   const data = collectEditorData(status);
   if (!data.title) { toast('Add a title before saving.','warning'); return; }
   clearTimeout(autosaveTimer);
@@ -2378,6 +2383,14 @@ async function savePost(status) {
 let autosaveTimer = null;
 let autosaveInFlight = false;
 let autosaveGeneration = 0;
+// Tracks the currently-running autosave's write so a manual Publish/Save
+// Draft can wait for it to finish (see savePost) instead of firing a
+// second, concurrent write to the same row. Without this, an older
+// autosave (queued from typing before e.g. a link was added) could
+// finish AFTER a newer manual save and silently revert it — invisible
+// until the post is reopened, since only the database write races, not
+// the live editor content.
+let autosaveInFlightPromise = null;
 
 function scheduleAutosave() {
   if (curView !== 'editor') return;
@@ -2395,25 +2408,32 @@ async function autosavePost() {
   autosaveInFlight = true;
   const ind = document.getElementById('autosaveInd');
   ind.textContent = 'Saving…';
-  try {
-    if (editingId) {
-      await DB.updatePost(editingId, data);
-    } else {
-      const p = await DB.createPost(data);
-      if (p) { editingId = p.id; document.getElementById('btnDelete').classList.remove('hidden'); }
+
+  const work = (async () => {
+    try {
+      if (editingId) {
+        await DB.updatePost(editingId, data);
+      } else {
+        const p = await DB.createPost(data);
+        if (p) { editingId = p.id; document.getElementById('btnDelete').classList.remove('hidden'); }
+      }
+      // A newer autosave (or a manual Publish/Save Draft) may have started
+      // and finished while this request was in flight — don't let a stale
+      // response overwrite a fresher "Saved" timestamp.
+      if (gen === autosaveGeneration) {
+        const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        ind.textContent = `Autosaved ${time}`;
+      }
+    } catch {
+      if (gen === autosaveGeneration) ind.textContent = 'Autosave failed';
+    } finally {
+      autosaveInFlight = false;
+      autosaveInFlightPromise = null;
     }
-    // A newer autosave (or a manual Publish/Save Draft) may have started
-    // and finished while this request was in flight — don't let a stale
-    // response overwrite a fresher "Saved" timestamp.
-    if (gen === autosaveGeneration) {
-      const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-      ind.textContent = `Autosaved ${time}`;
-    }
-  } catch {
-    if (gen === autosaveGeneration) ind.textContent = 'Autosave failed';
-  } finally {
-    autosaveInFlight = false;
-  }
+  })();
+
+  autosaveInFlightPromise = work;
+  await work;
 }
 
 /* ── IMPORT ─────────────────────────────────────────────── */
