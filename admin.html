@@ -94,6 +94,7 @@
     .sb-link i { width: 15px; font-size: 12px; color: rgba(255,255,255,.32); text-align: center; flex-shrink: 0; }
     .sb-link.accent { color: var(--gold-light); }
     .sb-link.accent i { color: var(--gold); }
+    .sb-badge { margin-left: auto; background: var(--gold); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
     .sb-bottom { padding: 14px 10px; border-top: 1px solid var(--sidebar-border); }
     .sb-user { display: flex; align-items: center; gap: 10px; padding: 8px; margin-bottom: 6px; }
     .sb-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
@@ -388,6 +389,7 @@
       <button class="sb-link active" data-nav="dashboard"><i class="fas fa-chart-bar"></i> Dashboard</button>
       <button class="sb-link" data-nav="posts"><i class="fas fa-file-alt"></i> All Posts</button>
       <button class="sb-link" data-nav="editor"><i class="fas fa-plus-circle"></i> New Post</button>
+      <button class="sb-link" data-nav="comments"><i class="fas fa-comments"></i> Comments <span class="sb-badge hidden" id="pendingCommentBadge">0</span></button>
       <a href="/" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
       <div class="sb-section">Shop</div>
       <button class="sb-link" data-nav="faves"><i class="fas fa-heart"></i> Shop My Faves</button>
@@ -810,6 +812,24 @@
           <button class="btn btn-outline btn-sm" id="btnExportLeads"><i class="fas fa-download"></i> Export CSV</button>
         </div>
         <div id="leadsTableBody"></div>
+      </div>
+    </div>
+
+    <!-- ── COMMENTS ── -->
+    <div id="panelComments" class="panel hidden">
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title">Comments</span>
+          <div class="table-filters">
+            <select class="f-select" id="fCommentStatus">
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="spam">Spam</option>
+              <option value="">All Statuses</option>
+            </select>
+          </div>
+        </div>
+        <div id="commentsTableBody"></div>
       </div>
     </div>
 
@@ -1363,6 +1383,34 @@ const LeadsDB = {
   },
 };
 
+/* ── COMMENTS (blog post comments, submitted via the submit-comment  ──────
+   Edge Function so a bot can't bypass Turnstile by hitting the REST API
+   directly — there's no INSERT policy for anon on this table). ────────── */
+const CommentsDB = {
+  async getComments(status) {
+    let query = supabaseClient.from('comments').select('*, posts(title, slug, category)').order('created_at', { ascending: false });
+    if (status) query = query.eq('status', status);
+    const { data, error } = await query;
+    if (error) { toast('Could not load comments: ' + error.message, 'error'); return []; }
+    return data;
+  },
+  async getPendingCount() {
+    const { count, error } = await supabaseClient.from('comments').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+    if (error) return 0;
+    return count || 0;
+  },
+  async setStatus(id, status) {
+    const { error } = await supabaseClient.from('comments').update({ status }).eq('id', id);
+    if (error) { toast('Could not update comment: ' + error.message, 'error'); return false; }
+    return true;
+  },
+  async deleteComment(id) {
+    const { error } = await supabaseClient.from('comments').delete().eq('id', id);
+    if (error) { toast('Could not delete comment: ' + error.message, 'error'); return false; }
+    return true;
+  },
+};
+
 /* ── SOCIAL LINKS (URLs + follower counts) ──────────────── */
 const SocialDB = {
   async getLinks() {
@@ -1584,7 +1632,7 @@ async function nav(view, id=null, { push=true }={}) {
   if (panel) panel.classList.remove('hidden');
   const link = document.querySelector(`.sb-link[data-nav="${view}"]`);
   if (link) link.classList.add('active');
-  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration',press:'Press Features',pressEditor:id?'Edit Feature':'New Feature',sidebar:'Post Sidebar'};
+  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',comments:'Comments',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration',press:'Press Features',pressEditor:id?'Edit Feature':'New Feature',sidebar:'Post Sidebar'};
   document.getElementById('topbarLabel').innerHTML = `<strong>${labels[view]||view}</strong>`;
   // Sub-views (editors) get a visible back arrow to their list view —
   // handy on mobile, where the sidebar nav is tucked behind the
@@ -1600,6 +1648,7 @@ async function nav(view, id=null, { push=true }={}) {
   if (view==='faves')            await renderFavesTable();
   if (view==='faveEditor')       await initFaveEditor(id);
   if (view==='leads')            await renderLeadsTable();
+  if (view==='comments')         await renderCommentsTable();
   if (view==='social')           await renderSocialPanel();
   if (view==='brands')           await renderBrandsPanel();
   if (view==='portfolio')        await renderPortfolioTable();
@@ -1795,6 +1844,52 @@ function confirmDelLead(leadId) {
     toast('Lead deleted.','success');
     await renderLeadsTable();
   });
+}
+
+/* ── COMMENTS TABLE ─────────────────────────────────────── */
+async function renderCommentsTable() {
+  const status = document.getElementById('fCommentStatus')?.value || '';
+  const comments = await CommentsDB.getComments(status);
+  document.getElementById('commentsTableBody').innerHTML = commentRows(comments);
+  refreshPendingCommentBadge();
+}
+
+function commentRows(comments) {
+  if (!comments.length) return `<div class="empty-state"><i class="fas fa-comments"></i>No comments here.</div>`;
+  return `<table><thead><tr><th>Comment</th><th>Post</th><th>Status</th><th>Date</th><th style="width:140px;">Actions</th></tr></thead><tbody>
+    ${comments.map(c=>`<tr>
+      <td class="t-title">${esc(c.name||'Anonymous')}<small>${esc((c.body||'').slice(0,140))}${(c.body||'').length>140?'…':''}</small></td>
+      <td>${c.posts?.title ? esc(c.posts.title) : '<span style="color:var(--muted);">(deleted post)</span>'}</td>
+      <td><span class="badge b-${c.status==='approved'?'published':c.status==='spam'?'draft':'draft'}" style="${c.status==='spam'?'background:rgba(239,68,68,.1);color:var(--danger);':''}">${c.status}</span></td>
+      <td style="white-space:nowrap;font-size:12px;color:var(--muted);">${fmtDate(c.created_at)}</td>
+      <td><div class="action-btns">
+        ${c.status!=='approved'?`<button class="btn-icon" onclick="setCommentStatus('${c.id}','approved')" title="Approve"><i class="fas fa-check"></i></button>`:''}
+        ${c.status!=='spam'?`<button class="btn-icon" onclick="setCommentStatus('${c.id}','spam')" title="Mark as spam"><i class="fas fa-ban"></i></button>`:''}
+        <button class="btn-icon del" onclick="confirmDelComment('${c.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function setCommentStatus(id, status) {
+  const ok = await CommentsDB.setStatus(id, status);
+  if (ok) { toast(status==='approved'?'Comment approved!':'Marked as spam.', 'success'); renderCommentsTable(); }
+}
+
+function confirmDelComment(id) {
+  openModal('Delete this comment?','This will permanently remove it.', async ()=>{
+    await CommentsDB.deleteComment(id);
+    toast('Comment deleted.', 'success');
+    renderCommentsTable();
+  });
+}
+
+async function refreshPendingCommentBadge() {
+  const count = await CommentsDB.getPendingCount();
+  const badge = document.getElementById('pendingCommentBadge');
+  if (!badge) return;
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
 }
 
 function exportLeadsCSV(leads) {
@@ -2540,6 +2635,7 @@ async function enterApp() {
   }
   try { history.replaceState({ view: lastView.view, id: lastView.id }, '', location.pathname); } catch {}
   nav(lastView.view, lastView.id, { push:false });
+  refreshPendingCommentBadge();
 }
 
 // Browser back/forward moves between admin views instead of leaving the CMS.
@@ -3149,6 +3245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('input',renderPostsTable);
   });
+  document.getElementById('fCommentStatus')?.addEventListener('change', renderCommentsTable);
 
   // Import file input
   document.getElementById('importFile').addEventListener('change',e=>handleImportFile(e.target.files[0]));

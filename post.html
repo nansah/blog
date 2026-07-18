@@ -268,6 +268,26 @@
       transition: var(--transition, all .2s);
     }
     .admin-edit-inline a:hover { color: #fff; background: #1c1712; border-color: #1c1712; }
+
+    .comments-section { margin-top: 44px; padding-top: 32px; border-top: 1px solid #e9e0d3; }
+    .comments-heading { font-family: 'Lora', Georgia, serif; font-size: 20px; font-weight: 600; color: #1c1712; margin-bottom: 24px; }
+    .comment-item { padding: 18px 0; border-bottom: 1px solid #f0ebe2; }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-item-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+    .comment-item-head strong { font-size: 14px; color: #1c1712; }
+    .comment-item-head span { font-size: 12px; color: #a9a094; }
+    .comment-item p { font-size: 14.5px; line-height: 1.7; color: #3a3129; white-space: pre-wrap; }
+    .comments-empty { font-size: 14px; color: #7a6f63; margin-bottom: 8px; }
+    .comment-form { display: flex; flex-direction: column; gap: 12px; max-width: 560px; margin-top: 28px; }
+    .comment-input, .comment-textarea {
+      padding: 13px 16px; border: 1.5px solid #e9e0d3; border-radius: 6px;
+      font-family: 'Jost', sans-serif; font-size: 14px; color: #1c1712; outline: none;
+      background: #faf7f2; transition: border-color .2s;
+    }
+    .comment-input:focus, .comment-textarea:focus { border-color: #a9603f; background: #fff; }
+    .comment-textarea { resize: vertical; min-height: 100px; }
+    .comment-form .btn { align-self: flex-start; }
+    .comment-form-note { font-size: 12.5px; color: #7a6f63; margin: 0; }
   </style>
 </head>
 <body class="category-page">
@@ -372,6 +392,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/supabase-client.js"></script>
   <script src="/script.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script>
     /* ── Post Viewer ───────────────────────────────────────────────────────── */
     const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -478,6 +499,22 @@
             ${tags.length?`<div class="post-tags">${tags.map(t=>`<span class="post-tag">#${esc(t)}</span>`).join('')}</div>`:''}
             <div class="admin-edit-inline" id="adminEditInline">
               <a href="#" id="adminEditLink"><i class="fas fa-pencil-alt"></i> Edit This Post</a>
+            </div>
+            <div class="comments-section" id="commentsSection">
+              <h3 class="comments-heading">Comments (<span id="commentsCount">0</span>)</h3>
+              <div id="commentsList"></div>
+              <form class="comment-form" id="commentForm" novalidate>
+                <input type="text" id="commentName" class="comment-input" placeholder="Your name" maxlength="80" required />
+                <textarea id="commentBody" class="comment-textarea" placeholder="Share your thoughts…" maxlength="2000" required></textarea>
+                <!-- Honeypot: hidden from real visitors, but bots that fill every field trip it. -->
+                <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+                  <label for="commentCompany">Company</label>
+                  <input type="text" id="commentCompany" name="company" tabindex="-1" autocomplete="off" />
+                </div>
+                <div class="cf-turnstile" data-sitekey="0x4AAAAAAD0gcQWVDCAJfk6Y"></div>
+                <button type="submit" class="btn btn-dark">Post Comment</button>
+                <p class="comment-form-note" id="commentFormNote"></p>
+              </form>
             </div>
           </div>
           <aside class="post-sidebar" id="postSidebar"></aside>
@@ -681,9 +718,107 @@
       if (slug) post = await getPostBySlug(slug);
       else if (id) post = await getPostById(id);
 
-      if (post) { renderPost(post); showAdminEditLink(post); }
+      if (post) { renderPost(post); showAdminEditLink(post); renderComments(post); }
       else renderNotFound();
     })();
+
+    // Loads approved comments for this post and wires up the submission
+    // form. Comments go through the submit-comment Edge Function (which
+    // verifies the Turnstile token server-side) rather than an INSERT
+    // policy, so a bot hitting the Supabase REST API directly can't post
+    // spam straight to the table the way it could with a simple "anon
+    // insert, with check true" policy. New comments land as 'pending' and
+    // only show up here once approved in the admin Comments panel.
+    async function renderComments(post) {
+      const section = document.getElementById('commentsSection');
+      if (!section || !post?.id || typeof supabaseClient === 'undefined') return;
+
+      const { data: comments } = await supabaseClient
+        .from('comments').select('*')
+        .eq('post_id', post.id).eq('status', 'approved')
+        .order('created_at', { ascending: true });
+
+      const list = comments || [];
+      document.getElementById('commentsCount').textContent = list.length;
+      document.getElementById('commentsList').innerHTML = list.length
+        ? list.map(c => `
+            <div class="comment-item">
+              <div class="comment-item-head"><strong>${esc(c.name)}</strong><span>${fmtDate(c.created_at)}</span></div>
+              <p>${esc(c.body)}</p>
+            </div>
+          `).join('')
+        : `<p class="comments-empty">Be the first to comment.</p>`;
+
+      wireCommentForm(post.id);
+    }
+
+    function wireCommentForm(postId) {
+      const form = document.getElementById('commentForm');
+      if (!form || form.dataset.wired) return;
+      form.dataset.wired = '1';
+      const loadedAt = Date.now();
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const note = document.getElementById('commentFormNote');
+        const name = document.getElementById('commentName').value.trim();
+        const body = document.getElementById('commentBody').value.trim();
+        if (!name || !body) return;
+
+        // Bot check: honeypot field filled, or submitted implausibly fast.
+        // Fail silently with a fake success so bots don't learn to adapt.
+        const honeypot = document.getElementById('commentCompany').value.trim();
+        const tooFast = Date.now() - loadedAt < 1500;
+        if (honeypot || tooFast) {
+          form.reset();
+          note.style.color = '';
+          note.textContent = 'Thanks! Your comment is awaiting moderation.';
+          return;
+        }
+
+        const turnstileToken = form.querySelector('[name="cf-turnstile-response"]')?.value;
+        if (!turnstileToken) {
+          note.style.color = '#c0392b';
+          note.textContent = 'Please complete the verification check, then try again.';
+          return;
+        }
+
+        const btn = form.querySelector('button[type="submit"]');
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Posting…';
+
+        let error = null;
+        try {
+          const res = await fetch(`${SUPABASE_URL}/functions/v1/submit-comment`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              apikey: SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ postId, name, body, turnstileToken }),
+          });
+          const result = await res.json();
+          if (!res.ok || !result.success) error = { message: result.error || 'Submission failed' };
+        } catch {
+          error = { message: 'Network error' };
+        }
+
+        if (typeof turnstile !== 'undefined') turnstile.reset();
+        btn.disabled = false;
+        btn.textContent = original;
+
+        if (error) {
+          note.style.color = '#c0392b';
+          note.textContent = error.message;
+        } else {
+          form.reset();
+          note.style.color = '';
+          note.textContent = 'Thanks! Your comment is awaiting moderation and will appear once approved.';
+        }
+      });
+    }
 
     // Shows an inline "Edit This Post" link at the bottom of the article
     // to the logged-in admin only — gated on an active Supabase auth
