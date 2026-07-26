@@ -1,7 +1,8 @@
 {
   "trailingSlash": false,
   "functions": {
-    "api/post.js": { "includeFiles": "post.html" }
+    "api/post.js": { "includeFiles": "post.html" },
+    "api/category.js": { "includeFiles": "{lifestyle,fashion,beauty,faith,blog}.html" }
   },
   "rewrites": [
     { "source": "/blog/:category/:slug", "destination": "/api/post?category=:category&slug=:slug" },
@@ -10,13 +11,13 @@
     { "source": "/post/:slug", "destination": "/api/post?slug=:slug" },
     { "source": "/post", "destination": "/post.html" },
     { "source": "/about", "destination": "/about.html" },
-    { "source": "/beauty", "destination": "/beauty.html" },
-    { "source": "/blog", "destination": "/blog.html" },
+    { "source": "/beauty", "destination": "/api/category?page=beauty" },
+    { "source": "/blog", "destination": "/api/category?page=blog" },
     { "source": "/contact", "destination": "/contact.html" },
-    { "source": "/faith", "destination": "/faith.html" },
-    { "source": "/fashion", "destination": "/fashion.html" },
+    { "source": "/faith", "destination": "/api/category?page=faith" },
+    { "source": "/fashion", "destination": "/api/category?page=fashion" },
     { "source": "/faves", "destination": "/faves.html" },
-    { "source": "/lifestyle", "destination": "/lifestyle.html" },
+    { "source": "/lifestyle", "destination": "/api/category?page=lifestyle" },
     { "source": "/press", "destination": "/press.html" },
     { "source": "/resources", "destination": "/resources.html" },
     { "source": "/work-with-me", "destination": "/work-with-me.html" },
