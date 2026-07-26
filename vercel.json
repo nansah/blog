@@ -1,10 +1,13 @@
 {
   "trailingSlash": false,
+  "functions": {
+    "api/post.js": { "includeFiles": "post.html" }
+  },
   "rewrites": [
-    { "source": "/blog/:category/:slug", "destination": "/post.html" },
-    { "source": "/blog/:slug", "destination": "/post.html" },
-    { "source": "/post/:category/:slug", "destination": "/post.html" },
-    { "source": "/post/:slug", "destination": "/post.html" },
+    { "source": "/blog/:category/:slug", "destination": "/api/post?category=:category&slug=:slug" },
+    { "source": "/blog/:slug", "destination": "/api/post?slug=:slug" },
+    { "source": "/post/:category/:slug", "destination": "/api/post?category=:category&slug=:slug" },
+    { "source": "/post/:slug", "destination": "/api/post?slug=:slug" },
     { "source": "/post", "destination": "/post.html" },
     { "source": "/about", "destination": "/about.html" },
     { "source": "/beauty", "destination": "/beauty.html" },
