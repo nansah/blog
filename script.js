@@ -359,6 +359,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   grid.querySelectorAll('.post-card-skeleton').forEach(el => el.remove());
   if (error || !relevant || !relevant.length) return;
 
+  // Category/blog pages arrive with this grid already server-rendered
+  // (api/category.js) for crawlers — clear it now that we have our own
+  // fetch to render from, so posts don't end up duplicated.
+  grid.innerHTML = '';
+
   const fmtDate = iso => {
     try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }); }
     catch { return ''; }
