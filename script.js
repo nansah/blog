@@ -183,12 +183,33 @@ let searchOverlay;
 let searchInput;
 let searchResults;
 
+// Populated from Supabase so post titles/keywords are searchable too —
+// searchIndex above only covers static site pages/sections.
+let postSearchIndex = [];
+(async function loadPostSearchIndex() {
+  if (typeof supabaseClient === 'undefined') return;
+  const { data, error } = await supabaseClient
+    .from('posts').select('title,slug,category,excerpt,tags')
+    .eq('status', 'published');
+  if (error || !data) return;
+  postSearchIndex = data.map(post => {
+    const catSlug = post.category ? post.category.toLowerCase() + '/' : '';
+    return {
+      title: post.title,
+      group: post.category || 'Post',
+      href: `/blog/${catSlug}${post.slug}`,
+      keywords: [post.excerpt, ...(Array.isArray(post.tags) ? post.tags : [])].filter(Boolean).join(' ').toLowerCase(),
+    };
+  });
+})();
+
 function renderSearchResults(query = '') {
   if (!searchResults) return;
 
   const term = query.trim().toLowerCase();
-  const matches = searchIndex.filter(item => (
-    item.title.toLowerCase().includes(term) || item.group.toLowerCase().includes(term)
+  const pool = term ? [...searchIndex, ...postSearchIndex] : searchIndex;
+  const matches = pool.filter(item => (
+    item.title.toLowerCase().includes(term) || item.group.toLowerCase().includes(term) || (item.keywords || '').includes(term)
   ));
 
   if (!matches.length) {
