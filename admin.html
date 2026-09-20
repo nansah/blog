@@ -1727,6 +1727,7 @@ function postRows(posts) {
       <td><div class="action-btns">
         <button class="btn-icon" onclick="nav('editor','${p.id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
         <a class="btn-icon" href="/blog/${p.category?esc(p.category.toLowerCase())+'/':''}${p.slug||p.id}" target="_blank" title="Preview"><i class="fas fa-eye"></i></a>
+        <button class="btn-icon" onclick="duplicatePost('${p.id}')" title="Duplicate"><i class="fas fa-copy"></i></button>
         <button class="btn-icon del" onclick="confirmDel('${p.id}')" title="Delete"><i class="fas fa-trash"></i></button>
       </div></td>
     </tr>`).join('')}
@@ -2292,8 +2293,11 @@ function renderShopLinksList() {
     <div class="shop-link-row" data-idx="${i}">
       <button type="button" class="shop-link-remove" data-idx="${i}" title="Remove"><i class="fas fa-times"></i></button>
       <input class="meta-in sl-name" data-idx="${i}" data-field="name" placeholder="Product name" value="${esc(item.name||'')}" />
-      <input class="meta-in sl-url" data-idx="${i}" data-field="url" placeholder="Shop link (ShopMy, Amazon, etc.)" value="${esc(item.url||'')}" />
-      <input class="meta-in sl-image" data-idx="${i}" data-field="image" placeholder="Image URL (optional)" value="${esc(item.image||'')}" />
+      <div style="display:flex;gap:6px;">
+        <input class="meta-in sl-url" data-idx="${i}" data-field="url" placeholder="Shop link (ShopMy, Amazon, etc.)" value="${esc(item.url||'')}" style="flex:1;min-width:0;" />
+        <button type="button" class="btn btn-outline btn-sm sl-fetch" data-idx="${i}" title="Auto-fetch image from link" style="flex-shrink:0;padding:0 10px;"><i class="fas fa-arrows-rotate"></i></button>
+      </div>
+      <input class="meta-in sl-image" data-idx="${i}" data-field="image" placeholder="Image URL (auto-filled, or paste your own)" value="${esc(item.image||'')}" />
     </div>
   `).join('');
 }
@@ -2305,12 +2309,36 @@ function wireShopLinksList() {
     const rows = document.querySelectorAll('#shopLinksList .sl-name');
     rows[rows.length-1]?.focus();
   });
-  document.getElementById('shopLinksList').addEventListener('click', e => {
-    const btn = e.target.closest('.shop-link-remove');
-    if (!btn) return;
-    shopLinksState.splice(parseInt(btn.dataset.idx,10), 1);
-    renderShopLinksList();
-    scheduleAutosave();
+  document.getElementById('shopLinksList').addEventListener('click', async e => {
+    const removeBtn = e.target.closest('.shop-link-remove');
+    if (removeBtn) {
+      shopLinksState.splice(parseInt(removeBtn.dataset.idx,10), 1);
+      renderShopLinksList();
+      scheduleAutosave();
+      return;
+    }
+    const fetchBtn = e.target.closest('.sl-fetch');
+    if (fetchBtn) {
+      const idx = parseInt(fetchBtn.dataset.idx, 10);
+      const item = shopLinksState[idx];
+      if (!item || !item.url.trim()) { toast('Add a shop link first.', 'warning'); return; }
+      const icon = fetchBtn.querySelector('i');
+      icon.className = 'fas fa-spinner fa-spin';
+      fetchBtn.disabled = true;
+      try {
+        const r = await fetch(`/api/link-preview?url=${encodeURIComponent(item.url.trim())}`);
+        const data = await r.json();
+        if (data.image) item.image = data.image;
+        if (data.title && !item.name.trim()) item.name = data.title;
+        if (!data.image) toast('Could not find an image at that link — paste one manually.', 'warning');
+        renderShopLinksList();
+        scheduleAutosave();
+      } catch {
+        toast('Could not fetch preview image.', 'error');
+        icon.className = 'fas fa-arrows-rotate';
+        fetchBtn.disabled = false;
+      }
+    }
   });
   document.getElementById('shopLinksList').addEventListener('input', e => {
     const input = e.target.closest('[data-field]');
@@ -2656,6 +2684,36 @@ async function doImport() {
   }
   resetImport();
   setTimeout(()=>nav('posts'),1000);
+}
+
+/* ── DUPLICATE POST ─────────────────────────────────────── */
+// Copies a post as a new draft (so the duplicate never accidentally goes
+// live) with "(Copy)" appended to the title and a unique slug, then
+// opens it straight in the editor for tweaking.
+async function duplicatePost(postId) {
+  const p = await DB.getPost(postId);
+  if (!p) return;
+  const title = `${p.title || 'Untitled'} (Copy)`;
+  const data = {
+    title,
+    slug: `${slugify(title)}-${Date.now().toString(36)}`,
+    content: p.content || '',
+    excerpt: p.excerpt || '',
+    category: p.category || '',
+    tags: Array.isArray(p.tags) ? p.tags.slice() : [],
+    image: p.image || '',
+    readTime: p.readTime || '',
+    status: 'draft',
+    focal_x: p.focal_x ?? 50,
+    focal_y: p.focal_y ?? 50,
+    featured: false,
+    shopLinks: Array.isArray(p.shopLinks) ? p.shopLinks.slice() : [],
+    publishedAt: new Date().toISOString(),
+  };
+  const created = await DB.createPost(data);
+  if (!created) return;
+  toast('Post duplicated — editing the copy now.', 'success');
+  await nav('editor', created.id);
 }
 
 /* ── CONFIRM MODAL ──────────────────────────────────────── */
