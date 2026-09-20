@@ -231,6 +231,9 @@
     .meta-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
     .meta-in, .meta-sel { padding: 7px 9px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; color: var(--black); background: var(--white); outline: none; width: 100%; transition: border-color .18s; }
     .meta-in:focus, .meta-sel:focus { border-color: var(--gold); }
+    .shop-link-row { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+    .shop-link-remove { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border: none; background: none; color: var(--muted); cursor: pointer; font-size: 12px; }
+    .shop-link-remove:hover { color: #c0392b; }
     .feat-prev { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 7px; display: none; margin-top: 8px; }
     .feat-prev.show { display: block; }
     .focal-picker { position: relative; display: none; margin-top: 8px; border-radius: 7px; overflow: hidden; cursor: crosshair; user-select: none; }
@@ -628,6 +631,16 @@
             <div class="meta-body">
               <input class="meta-in" id="eReadTime" placeholder="e.g. 5 min read" />
               <button class="btn btn-outline btn-sm" id="btnCalcRead" style="align-self:flex-start;">Auto-calculate</button>
+            </div>
+          </div>
+
+          <!-- Shop This Post -->
+          <div class="meta-card">
+            <div class="meta-head">Shop This Post</div>
+            <div class="meta-body">
+              <p style="font-size:11px;color:var(--muted);margin:0;line-height:1.5;">Link products via ShopMy, Amazon, or any shop link — shown under the post as "Shop This Post".</p>
+              <div id="shopLinksList" style="display:flex;flex-direction:column;gap:10px;"></div>
+              <button type="button" class="btn btn-outline btn-sm" id="btnAddShopLink" style="align-self:flex-start;"><i class="fas fa-plus"></i> Add Product</button>
             </div>
           </div>
 
@@ -1280,13 +1293,15 @@ function normalizePost(row) {
     createdAt:   row.created_at,
     updatedAt:   row.updated_at,
     readTime:    row.read_time,
+    shopLinks:   row.shop_links,
   };
 }
 function denormalizePost(data) {
-  const { readTime, publishedAt, createdAt, updatedAt, ...rest } = data;
+  const { readTime, publishedAt, createdAt, updatedAt, shopLinks, ...rest } = data;
   const out = { ...rest };
   if (readTime    !== undefined) out.read_time    = readTime;
   if (publishedAt !== undefined) out.published_at = publishedAt;
+  if (shopLinks   !== undefined) out.shop_links   = shopLinks;
   return out;
 }
 
@@ -2266,6 +2281,47 @@ function renderSidebarBlockList(blocks) {
   });
 }
 
+/* ── EDITOR: SHOP THIS POST ────────────────────────────────
+   Per-post product links (ShopMy, Amazon, etc.) rendered as a "Shop
+   This Post" grid under the article — see supabase-setup-12.sql. */
+let shopLinksState = [];
+
+function renderShopLinksList() {
+  const list = document.getElementById('shopLinksList');
+  list.innerHTML = shopLinksState.map((item, i) => `
+    <div class="shop-link-row" data-idx="${i}">
+      <button type="button" class="shop-link-remove" data-idx="${i}" title="Remove"><i class="fas fa-times"></i></button>
+      <input class="meta-in sl-name" data-idx="${i}" data-field="name" placeholder="Product name" value="${esc(item.name||'')}" />
+      <input class="meta-in sl-url" data-idx="${i}" data-field="url" placeholder="Shop link (ShopMy, Amazon, etc.)" value="${esc(item.url||'')}" />
+      <input class="meta-in sl-image" data-idx="${i}" data-field="image" placeholder="Image URL (optional)" value="${esc(item.image||'')}" />
+    </div>
+  `).join('');
+}
+
+function wireShopLinksList() {
+  document.getElementById('btnAddShopLink').addEventListener('click', () => {
+    shopLinksState.push({ name: '', url: '', image: '' });
+    renderShopLinksList();
+    const rows = document.querySelectorAll('#shopLinksList .sl-name');
+    rows[rows.length-1]?.focus();
+  });
+  document.getElementById('shopLinksList').addEventListener('click', e => {
+    const btn = e.target.closest('.shop-link-remove');
+    if (!btn) return;
+    shopLinksState.splice(parseInt(btn.dataset.idx,10), 1);
+    renderShopLinksList();
+    scheduleAutosave();
+  });
+  document.getElementById('shopLinksList').addEventListener('input', e => {
+    const input = e.target.closest('[data-field]');
+    if (!input) return;
+    const idx = parseInt(input.dataset.idx, 10);
+    if (!shopLinksState[idx]) return;
+    shopLinksState[idx][input.dataset.field] = input.value;
+    scheduleAutosave();
+  });
+}
+
 /* ── EDITOR ─────────────────────────────────────────────── */
 async function initEditor(postId) {
   document.getElementById('autosaveInd').textContent = '';
@@ -2287,6 +2343,8 @@ async function initEditor(postId) {
   document.getElementById('eFocalY').value = 50;
   showFocalPicker('imgPrev','imgFocalPicker','imgFocalHint','',50,50,'imgFocalMarker');
   document.getElementById('btnDelete').classList.add('hidden');
+  shopLinksState = [];
+  renderShopLinksList();
   setStatusUI('draft');
 
   if (postId) {
@@ -2310,6 +2368,8 @@ async function initEditor(postId) {
       if (p.image) {
         showFocalPicker('imgPrev','imgFocalPicker','imgFocalHint',p.image,fx,fy,'imgFocalMarker');
       }
+      shopLinksState = Array.isArray(p.shopLinks) ? p.shopLinks.map(l => ({ name:l.name||'', url:l.url||'', image:l.image||'' })) : [];
+      renderShopLinksList();
       setStatusUI(p.status||'draft');
       document.getElementById('btnDelete').classList.remove('hidden');
     }
@@ -2335,7 +2395,8 @@ function collectEditorData(status) {
   const focal_x = parseInt(document.getElementById('eFocalX').value, 10) || 50;
   const focal_y = parseInt(document.getElementById('eFocalY').value, 10) || 50;
   const featured = document.getElementById('eFeatured').checked;
-  return { title, slug, content, excerpt, category, tags, image, readTime, status, focal_x, focal_y, featured, publishedAt: dateVal?nyDatetimeLocalToISO(dateVal):new Date().toISOString() };
+  const shopLinks = shopLinksState.filter(l => l.url && l.url.trim());
+  return { title, slug, content, excerpt, category, tags, image, readTime, status, focal_x, focal_y, featured, shopLinks, publishedAt: dateVal?nyDatetimeLocalToISO(dateVal):new Date().toISOString() };
 }
 
 // Previews unsaved editor changes without writing to the database: the
@@ -2815,6 +2876,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('eExcerpt').value = text;
     scheduleAutosave();
   });
+
+  // Editor: Shop This Post (add/remove/edit product link rows)
+  wireShopLinksList();
 
   // Fave editor: status change
   document.getElementById('fvStatus').addEventListener('change',e=>setFaveStatusUI(e.target.value));

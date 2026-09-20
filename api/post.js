@@ -45,6 +45,20 @@ function articleHTML(post) {
   const focalPos = `${post.focal_x ?? 50}% ${post.focal_y ?? 50}%`;
   const catHref = CATEGORY_HREF[post.category] || '/';
   const tags = Array.isArray(post.tags) ? post.tags.filter(Boolean) : [];
+  const shopLinks = Array.isArray(post.shop_links) ? post.shop_links.filter(l => l && l.url) : [];
+  const shopHTML = !shopLinks.length ? '' : `
+    <div class="shop-post-section">
+      <h3 class="shop-post-heading"><i class="fas fa-bag-shopping"></i> Shop This Post</h3>
+      <div class="shop-post-grid">
+        ${shopLinks.map(item => `
+          <a class="shop-post-item" href="${esc(item.url)}" target="_blank" rel="noopener sponsored">
+            <div class="shop-post-img">${item.image ? `<img src="${esc(item.image)}" alt="${esc(item.name||'')}" loading="lazy" />` : `<i class="fas fa-bag-shopping"></i>`}</div>
+            <span class="shop-post-name">${esc(item.name||'Shop this')}</span>
+            <span class="shop-post-cta">Shop Now <i class="fas fa-arrow-right"></i></span>
+          </a>
+        `).join('')}
+      </div>
+    </div>`;
 
   const heroHTML = post.image
     ? `<div class="post-hero">
@@ -85,6 +99,7 @@ function articleHTML(post) {
         ${!post.image ? '' : `<img src="${esc(post.image)}" alt="${esc(post.title)}" loading="lazy" style="object-position: ${focalPos};" class="article-top-image" />`}
         <div class="article-body" id="articleBody">${post.content || '<p>No content.</p>'}</div>
         ${tags.length ? `<div class="post-tags">${tags.map(t => `<span class="post-tag">#${esc(t)}</span>`).join('')}</div>` : ''}
+        ${shopHTML}
       </div>
       <aside class="post-sidebar" id="postSidebar"></aside>
     </div>
