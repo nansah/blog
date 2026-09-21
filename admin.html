@@ -161,6 +161,30 @@
     .b-cat { background: var(--gold-dim); color: #92660a; }
     .action-btns { display: flex; gap: 5px; align-items: center; }
     .empty-state { padding: 48px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    /* ── EDITORIAL CALENDAR ── */
+    .cal-scroll { overflow-x: auto; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); min-width: 760px; }
+    .cal-dow { padding: 8px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); text-align: center; border-bottom: 1px solid var(--border); background: #fafaf9; }
+    .cal-day { min-height: 104px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 6px; display: flex; flex-direction: column; gap: 4px; position: relative; cursor: pointer; transition: background .15s; }
+    .cal-day:hover { background: #fafaf9; }
+    .cal-day:nth-child(7n) { border-right: none; }
+    .cal-day.other-month { background: #fbfaf8; opacity: .45; cursor: default; }
+    .cal-day.today { background: var(--gold-dim); }
+    .cal-day-num { font-size: 11px; font-weight: 700; color: var(--muted); }
+    .cal-day.today .cal-day-num { color: #92660a; }
+    .cal-post-pill { font-size: 10.5px; padding: 2px 6px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font-weight: 600; }
+    .cal-post-pill.published { background: rgba(34,197,94,.12); color: #15803d; }
+    .cal-post-pill.draft { background: rgba(245,158,11,.12); color: #b45309; }
+    .cal-post-pill:hover { filter: brightness(0.95); text-decoration: underline; }
+    .cal-day-add { position: absolute; top: 4px; right: 4px; width: 18px; height: 18px; border: none; border-radius: 4px; background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,.15); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); opacity: 0; transition: opacity .15s; cursor: pointer; }
+    .cal-day:hover .cal-day-add { opacity: 1; }
+    .cal-legend { display: flex; align-items: center; gap: 16px; padding: 12px 20px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+    .cal-legend span { display: flex; align-items: center; gap: 6px; }
+    .cal-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .cal-dot.published { background: #22c55e; }
+    .cal-dot.draft { background: #f59e0b; }
+    .cal-legend-hint { color: #b4a998; }
     .empty-state i { font-size: 30px; margin-bottom: 12px; display: block; color: var(--gold-light); }
 
     /* ── EDITOR ── */
@@ -393,6 +417,7 @@
       <button class="sb-link active" data-nav="dashboard"><i class="fas fa-chart-bar"></i> Dashboard</button>
       <button class="sb-link" data-nav="posts"><i class="fas fa-file-alt"></i> All Posts</button>
       <button class="sb-link" data-nav="editor"><i class="fas fa-plus-circle"></i> New Post</button>
+      <button class="sb-link" data-nav="calendar"><i class="fas fa-calendar-days"></i> Editorial Calendar</button>
       <button class="sb-link" data-nav="comments"><i class="fas fa-comments"></i> Comments <span class="sb-badge hidden" id="pendingCommentBadge">0</span></button>
       <a href="/" target="_blank" class="sb-link accent"><i class="fas fa-external-link-alt"></i> View Blog</a>
       <div class="sb-section">Shop</div>
@@ -460,6 +485,29 @@
           </div>
         </div>
         <div id="postsTableBody"></div>
+      </div>
+    </div>
+
+    <!-- ── EDITORIAL CALENDAR ── -->
+    <div id="panelCalendar" class="panel hidden">
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-title" id="calMonthLabel">—</span>
+          <div class="table-filters" style="align-items:center;">
+            <select class="f-select" id="calCatFilter"><option value="">All Categories</option><option>Lifestyle</option><option>Fashion</option><option>Faith</option><option>Beauty</option><option>Creator Life</option></select>
+            <button class="btn-icon" id="calPrevBtn" title="Previous month"><i class="fas fa-chevron-left"></i></button>
+            <button class="btn btn-outline btn-sm" id="calTodayBtn">Today</button>
+            <button class="btn-icon" id="calNextBtn" title="Next month"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="cal-scroll">
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="cal-legend">
+          <span><i class="cal-dot published"></i> Published</span>
+          <span><i class="cal-dot draft"></i> Draft</span>
+          <span class="cal-legend-hint">Click a day to schedule a new post there — click a post to edit it.</span>
+        </div>
       </div>
     </div>
 
@@ -1651,7 +1699,7 @@ async function nav(view, id=null, { push=true }={}) {
   if (panel) panel.classList.remove('hidden');
   const link = document.querySelector(`.sb-link[data-nav="${view}"]`);
   if (link) link.classList.add('active');
-  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',comments:'Comments',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration',press:'Press Features',pressEditor:id?'Edit Feature':'New Feature',sidebar:'Post Sidebar'};
+  const labels = {dashboard:'Dashboard',posts:'All Posts',editor:id?'Edit Post':'New Post',calendar:'Editorial Calendar',comments:'Comments',import:'Import Posts',settings:'Settings',faves:'Shop My Faves',faveEditor:id?'Edit Fave':'New Fave',leads:'Resource Leads',social:'Social Links',brands:'Brand Partners',portfolio:'Past Collaborations',portfolioEditor:id?'Edit Collaboration':'New Collaboration',press:'Press Features',pressEditor:id?'Edit Feature':'New Feature',sidebar:'Post Sidebar'};
   document.getElementById('topbarLabel').innerHTML = `<strong>${labels[view]||view}</strong>`;
   // Sub-views (editors) get a visible back arrow to their list view —
   // handy on mobile, where the sidebar nav is tucked behind the
@@ -1662,6 +1710,7 @@ async function nav(view, id=null, { push=true }={}) {
   else { backBtn.classList.add('hidden'); }
   if (view==='dashboard')        await renderDashboard();
   if (view==='posts')            await renderPostsTable();
+  if (view==='calendar')         await renderCalendar();
   if (view==='editor')           await initEditor(id);
   if (view==='import')           resetImport();
   if (view==='faves')            await renderFavesTable();
@@ -1702,6 +1751,79 @@ function navToPosts(status, focusField) {
     renderPostsTable();
     if (focusField === 'cat') document.getElementById('fCat').focus();
   });
+}
+
+/* ── EDITORIAL CALENDAR ─────────────────────────────────────
+   Month grid of posts by publish date (publishedAt doubles as the
+   "scheduled for" date for drafts too — the editor always sets it,
+   defaulting to the moment the post was created). Click a post to edit
+   it; click empty space on a day to start a new post scheduled there. */
+let calDate = new Date();
+let pendingCalendarDate = null;
+
+function calDayKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+async function renderCalendar() {
+  const catFilter = document.getElementById('calCatFilter').value;
+  let posts = await DB.getPosts();
+  if (catFilter) posts = posts.filter(p => p.category === catFilter);
+
+  const postsByDay = {};
+  posts.forEach(p => {
+    const iso = p.publishedAt || p.createdAt;
+    if (!iso) return;
+    const key = calDayKey(new Date(iso));
+    (postsByDay[key] = postsByDay[key] || []).push(p);
+  });
+
+  const year = calDate.getFullYear(), month = calDate.getMonth();
+  document.getElementById('calMonthLabel').textContent = calDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const todayKey = calDayKey(new Date());
+
+  const cells = [];
+  for (let i = firstDow - 1; i >= 0; i--) cells.push({ dayNum: daysInPrevMonth - i, key: null });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ dayNum: d, key: `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}` });
+  let trailing = 1;
+  while (cells.length % 7 !== 0) cells.push({ dayNum: trailing++, key: null });
+
+  const dowHTML = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+  const cellsHTML = cells.map(c => {
+    const dayPosts = c.key ? (postsByDay[c.key] || []) : [];
+    const classes = ['cal-day'];
+    if (!c.key) classes.push('other-month');
+    if (c.key === todayKey) classes.push('today');
+    return `
+      <div class="${classes.join(' ')}" ${c.key?`onclick="calAddPost('${c.key}')"`:''}>
+        <span class="cal-day-num">${c.dayNum}</span>
+        ${c.key ? `<button type="button" class="cal-day-add" title="New post scheduled for this day" onclick="event.stopPropagation();calAddPost('${c.key}')"><i class="fas fa-plus"></i></button>` : ''}
+        ${dayPosts.map(p => `<div class="cal-post-pill ${p.status==='published'?'published':'draft'}" title="${esc(p.title||'Untitled')}" onclick="event.stopPropagation();nav('editor','${p.id}')">${esc(p.title||'Untitled')}</div>`).join('')}
+      </div>`;
+  }).join('');
+
+  document.getElementById('calGrid').innerHTML = dowHTML + cellsHTML;
+}
+
+function calShiftMonth(delta) {
+  calDate = new Date(calDate.getFullYear(), calDate.getMonth() + delta, 1);
+  renderCalendar();
+}
+
+function calGoToday() {
+  calDate = new Date();
+  renderCalendar();
+}
+
+// Jumps to a new post with Publish Date pre-filled to the clicked day
+// (consumed once by initEditor, see below).
+function calAddPost(dayKey) {
+  pendingCalendarDate = dayKey;
+  nav('editor');
 }
 
 /* ── POSTS TABLE ────────────────────────────────────────── */
@@ -2374,6 +2496,14 @@ async function initEditor(postId) {
   shopLinksState = [];
   renderShopLinksList();
   setStatusUI('draft');
+
+  // Came from clicking a day on the Editorial Calendar — pre-fill the
+  // publish date to that day (noon, to stay clear of any timezone
+  // rounding that could nudge it into the adjacent day) instead of now.
+  if (!postId && pendingCalendarDate) {
+    document.getElementById('eDate').value = `${pendingCalendarDate}T12:00`;
+    pendingCalendarDate = null;
+  }
 
   if (postId) {
     const p = await DB.getPost(postId);
@@ -3391,6 +3521,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('input',renderPostsTable);
   });
+
+  // Editorial Calendar
+  document.getElementById('calPrevBtn').addEventListener('click', () => calShiftMonth(-1));
+  document.getElementById('calNextBtn').addEventListener('click', () => calShiftMonth(1));
+  document.getElementById('calTodayBtn').addEventListener('click', calGoToday);
+  document.getElementById('calCatFilter').addEventListener('change', renderCalendar);
   document.getElementById('fCommentStatus')?.addEventListener('change', renderCommentsTable);
 
   // Import file input
