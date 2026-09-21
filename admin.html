@@ -163,6 +163,11 @@
     .empty-state { padding: 48px; text-align: center; color: var(--muted); font-size: 13px; }
 
     /* ── EDITORIAL CALENDAR ── */
+    .cal-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+    .cal-tab { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); color: var(--muted); font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all .15s; }
+    .cal-tab:hover { border-color: var(--gold); color: var(--gold); }
+    .cal-tab.active { background: var(--black); border-color: var(--black); color: #fff; }
+    .cal-tab.active i { color: var(--gold); }
     .cal-scroll { overflow-x: auto; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); min-width: 760px; }
     .cal-dow { padding: 8px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); text-align: center; border-bottom: 1px solid var(--border); background: #fafaf9; }
@@ -186,6 +191,40 @@
     .cal-dot.draft { background: #f59e0b; }
     .cal-legend-hint { color: #b4a998; }
     .empty-state i { font-size: 30px; margin-bottom: 12px; display: block; color: var(--gold-light); }
+
+    /* ── CONTENT PIPELINE ── */
+    .pipe-tally { background: var(--white); border-radius: 12px; border: 1px solid var(--border); padding: 14px 18px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .pipe-tally-chip { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; background: #fafaf9; border: 1px solid var(--border); font-size: 12px; font-weight: 600; }
+    .pipe-tally-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .pipe-tally-chip.met { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.07); }
+    .pipe-tally-count { color: var(--muted); font-weight: 700; }
+    .pipe-tally-chip.met .pipe-tally-count { color: #15803d; }
+    .pipe-board-scroll { overflow-x: auto; }
+    .pipe-board { display: grid; grid-auto-flow: column; grid-auto-columns: 220px; gap: 12px; padding: 16px; min-width: max-content; }
+    .pipe-col { background: #fafaf9; border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; max-height: 640px; transition: background .15s, border-color .15s; }
+    .pipe-col.drag-over { background: var(--gold-dim); border-color: var(--gold); }
+    .pipe-col-head { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .pipe-col-count { background: var(--border); color: var(--muted); border-radius: 10px; padding: 1px 7px; font-size: 10px; }
+    .pipe-col-body { padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; min-height: 60px; }
+    .pipe-col-add { margin: 0 8px 8px; padding: 6px; border: 1px dashed var(--border); border-radius: 7px; background: none; color: var(--muted); font-size: 11px; cursor: pointer; transition: all .15s; }
+    .pipe-col-add:hover { border-color: var(--gold); color: var(--gold); }
+    .pipe-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; cursor: grab; box-shadow: 0 1px 2px rgba(0,0,0,.03); transition: box-shadow .15s, transform .15s; }
+    .pipe-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,.08); transform: translateY(-1px); }
+    .pipe-card.dragging { opacity: .4; }
+    .pipe-card-title { font-size: 12.5px; font-weight: 600; color: var(--black); line-height: 1.35; margin-bottom: 6px; }
+    .pipe-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .pipe-ct-badge { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 4px; }
+    .pipe-ct-commerce { background: var(--gold-dim); color: #92660a; }
+    .pipe-ct-shopping-seo { background: rgba(59,130,246,.1); color: #2563eb; }
+    .pipe-ct-fashion { background: rgba(236,72,153,.1); color: #db2777; }
+    .pipe-ct-beauty-news { background: rgba(168,85,247,.1); color: #9333ea; }
+    .pipe-ct-feature { background: rgba(20,184,166,.12); color: #0d9488; }
+    .pipe-card-icons { display: flex; gap: 5px; color: var(--muted); font-size: 10px; }
+    .modal-wide { width: 560px; max-width: calc(100vw - 40px); max-height: 88vh; overflow-y: auto; }
+    .pipe-linked-box { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: var(--gold-dim); border-radius: 8px; font-size: 12px; font-weight: 600; color: #3a3129; }
+    .pipe-form { display: flex; flex-direction: column; gap: 12px; }
+    .pipe-form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    @media (max-width: 640px) { .pipe-form-row { grid-template-columns: 1fr; } }
 
     /* ── EDITOR ── */
     .editor-wrap { display: grid; grid-template-columns: 1fr 272px; gap: 18px; align-items: start; }
@@ -490,23 +529,48 @@
 
     <!-- ── EDITORIAL CALENDAR ── -->
     <div id="panelCalendar" class="panel hidden">
-      <div class="table-wrap">
-        <div class="table-head">
-          <span class="table-title" id="calMonthLabel">—</span>
-          <div class="table-filters" style="align-items:center;">
-            <select class="f-select" id="calCatFilter"><option value="">All Categories</option><option>Lifestyle</option><option>Fashion</option><option>Faith</option><option>Beauty</option><option>Creator Life</option></select>
-            <button class="btn-icon" id="calPrevBtn" title="Previous month"><i class="fas fa-chevron-left"></i></button>
-            <button class="btn btn-outline btn-sm" id="calTodayBtn">Today</button>
-            <button class="btn-icon" id="calNextBtn" title="Next month"><i class="fas fa-chevron-right"></i></button>
+      <div class="cal-tabs">
+        <button type="button" class="cal-tab active" id="calTabCalendar" onclick="switchCalTab('calendar')"><i class="fas fa-calendar-days"></i> Calendar</button>
+        <button type="button" class="cal-tab" id="calTabPipeline" onclick="switchCalTab('pipeline')"><i class="fas fa-diagram-project"></i> Pipeline</button>
+      </div>
+
+      <div id="calViewCalendar">
+        <div class="table-wrap">
+          <div class="table-head">
+            <span class="table-title" id="calMonthLabel">—</span>
+            <div class="table-filters" style="align-items:center;">
+              <select class="f-select" id="calCatFilter"><option value="">All Categories</option><option>Lifestyle</option><option>Fashion</option><option>Faith</option><option>Beauty</option><option>Creator Life</option></select>
+              <button class="btn-icon" id="calPrevBtn" title="Previous month"><i class="fas fa-chevron-left"></i></button>
+              <button class="btn btn-outline btn-sm" id="calTodayBtn">Today</button>
+              <button class="btn-icon" id="calNextBtn" title="Next month"><i class="fas fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="cal-scroll">
+            <div class="cal-grid" id="calGrid"></div>
+          </div>
+          <div class="cal-legend">
+            <span><i class="cal-dot published"></i> Published</span>
+            <span><i class="cal-dot draft"></i> Draft</span>
+            <span class="cal-legend-hint">Click a day to schedule a new post there — click a post to edit it.</span>
           </div>
         </div>
-        <div class="cal-scroll">
-          <div class="cal-grid" id="calGrid"></div>
-        </div>
-        <div class="cal-legend">
-          <span><i class="cal-dot published"></i> Published</span>
-          <span><i class="cal-dot draft"></i> Draft</span>
-          <span class="cal-legend-hint">Click a day to schedule a new post there — click a post to edit it.</span>
+      </div>
+
+      <div id="calViewPipeline" class="hidden">
+        <div class="pipe-tally" id="pipeTally"></div>
+        <div class="table-wrap" style="margin-top:14px;">
+          <div class="table-head">
+            <span class="table-title">Content Pipeline</span>
+            <div class="table-filters" style="align-items:center;">
+              <button class="btn-icon" id="pipePrevBtn" title="Previous month"><i class="fas fa-chevron-left"></i></button>
+              <span class="table-title" id="pipeMonthLabel" style="font-size:12px;min-width:110px;text-align:center;">—</span>
+              <button class="btn-icon" id="pipeNextBtn" title="Next month"><i class="fas fa-chevron-right"></i></button>
+              <button class="btn btn-gold btn-sm" id="btnPipeAdd"><i class="fas fa-plus"></i> New Idea</button>
+            </div>
+          </div>
+          <div class="pipe-board-scroll">
+            <div class="pipe-board" id="pipeBoard"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1176,6 +1240,64 @@
   </div>
 </div>
 
+<!-- ── PIPELINE ITEM MODAL ── -->
+<div class="modal-bg hidden" id="pipeModal">
+  <div class="modal modal-wide">
+    <h3 id="pipeModalTitle">New Idea</h3>
+    <div class="pipe-form">
+      <div class="s-field"><label class="s-lbl">Title</label><input type="text" class="s-in" id="pipeTitle" placeholder="Post idea / working title" /></div>
+      <div id="pipeLinkedPostBox" class="pipe-linked-box hidden">
+        <span id="pipeLinkedPostStatus"></span>
+        <button type="button" class="btn btn-outline btn-sm" id="btnPipeOpenDraft">Open Draft <i class="fas fa-arrow-right"></i></button>
+      </div>
+      <button type="button" class="btn btn-outline btn-sm" id="btnPipeCreateDraft" style="align-self:flex-start;"><i class="fas fa-file-circle-plus"></i> Create Draft Post</button>
+      <div class="pipe-form-row">
+        <div class="s-field">
+          <label class="s-lbl">Stage</label>
+          <select class="s-in" id="pipeStage">
+            <option value="idea">Idea</option>
+            <option value="researching">Researching</option>
+            <option value="testing">Testing</option>
+            <option value="drafting">Drafting</option>
+            <option value="editing">Editing</option>
+            <option value="seo_links">SEO/Links</option>
+            <option value="images">Images</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="published">Published</option>
+            <option value="update_needed">Update Needed</option>
+          </select>
+        </div>
+        <div class="s-field">
+          <label class="s-lbl">Content Type</label>
+          <select class="s-in" id="pipeContentType">
+            <option value="">—</option>
+            <option>Commerce</option>
+            <option>Shopping/SEO</option>
+            <option>Fashion</option>
+            <option>Beauty News</option>
+            <option>Feature</option>
+          </select>
+        </div>
+        <div class="s-field"><label class="s-lbl">Target Month</label><input type="month" class="s-in" id="pipeTargetMonth" /></div>
+      </div>
+      <div class="s-field"><label class="s-lbl">Keyword</label><input type="text" class="s-in" id="pipeKeyword" placeholder="Primary SEO keyword" /></div>
+      <div class="s-field"><label class="s-lbl">Products Needed</label><input type="text" class="s-in" id="pipeProducts" placeholder="What you need in hand before shooting/testing" /></div>
+      <div class="s-field"><label class="s-lbl">Testing Dates</label><input type="text" class="s-in" id="pipeTestingDates" placeholder="e.g. Sept 22–26" /></div>
+      <div class="s-field"><label class="s-lbl">Affiliate Opportunity</label><input type="text" class="s-in" id="pipeAffiliate" placeholder="ShopMy / Amazon / brand codes to line up" /></div>
+      <div class="s-field"><label class="s-lbl">Photo/Video Needed</label><input type="text" class="s-in" id="pipePhotoVideo" placeholder="Shots or clips still needed" /></div>
+      <div class="s-field"><label class="s-lbl">Social Deliverable</label><input type="text" class="s-in" id="pipeSocial" placeholder="Reel, carousel, TikTok, etc." /></div>
+      <div class="s-field"><label class="s-lbl">URL</label><input type="text" class="s-in" id="pipeUrl" placeholder="Live post link once published" /></div>
+    </div>
+    <div class="modal-btns" style="justify-content:space-between;margin-top:20px;">
+      <button class="btn btn-danger btn-sm hidden" id="btnPipeDelete"><i class="fas fa-trash"></i> Delete</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" id="btnPipeCancel">Cancel</button>
+        <button class="btn btn-primary" id="btnPipeSave">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="supabase-client.js"></script>
 <script>
@@ -1434,6 +1556,68 @@ const FaveDB = {
   async deleteFave(id) {
     const { error } = await supabaseClient.from('faves').delete().eq('id', id);
     if (error) toast('Could not delete fave: ' + error.message, 'error');
+  },
+};
+
+/* ── PIPELINE ITEMS (Content Pipeline board) ───────────────
+   camelCase in the app, snake_case in the DB — same rename pattern as
+   normalizePost/denormalizePost. */
+function normalizePipelineItem(row) {
+  if (!row) return null;
+  return {
+    ...row,
+    contentType:  row.content_type,
+    targetMonth:  row.target_month,
+    productsNeeded: row.products_needed,
+    testingDates: row.testing_dates,
+    affiliateOpportunity: row.affiliate_opportunity,
+    photoVideo: row.photo_video,
+    socialDeliverable: row.social_deliverable,
+    linkedPostId: row.linked_post_id,
+    sortOrder: row.sort_order,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+function denormalizePipelineItem(data) {
+  const { contentType, targetMonth, productsNeeded, testingDates, affiliateOpportunity, photoVideo, socialDeliverable, linkedPostId, sortOrder, createdAt, updatedAt, ...rest } = data;
+  const out = { ...rest };
+  if (contentType           !== undefined) out.content_type = contentType;
+  if (targetMonth           !== undefined) out.target_month = targetMonth;
+  if (productsNeeded        !== undefined) out.products_needed = productsNeeded;
+  if (testingDates          !== undefined) out.testing_dates = testingDates;
+  if (affiliateOpportunity  !== undefined) out.affiliate_opportunity = affiliateOpportunity;
+  if (photoVideo            !== undefined) out.photo_video = photoVideo;
+  if (socialDeliverable     !== undefined) out.social_deliverable = socialDeliverable;
+  if (linkedPostId          !== undefined) out.linked_post_id = linkedPostId;
+  if (sortOrder             !== undefined) out.sort_order = sortOrder;
+  return out;
+}
+const PipelineDB = {
+  async getItems() {
+    const { data, error } = await supabaseClient.from('pipeline_items').select('*').order('sort_order', { ascending: true });
+    if (error) { toast('Could not load pipeline: ' + error.message, 'error'); return []; }
+    return data.map(normalizePipelineItem);
+  },
+  async getItem(id) {
+    const { data, error } = await supabaseClient.from('pipeline_items').select('*').eq('id', id).maybeSingle();
+    if (error) return null;
+    return normalizePipelineItem(data);
+  },
+  async createItem(data) {
+    const row = { id: uid(), ...denormalizePipelineItem(data) };
+    const { data: inserted, error } = await supabaseClient.from('pipeline_items').insert(row).select().single();
+    if (error) { toast('Could not save idea: ' + error.message, 'error'); return null; }
+    return normalizePipelineItem(inserted);
+  },
+  async updateItem(id, data) {
+    const { data: updated, error } = await supabaseClient.from('pipeline_items').update(denormalizePipelineItem(data)).eq('id', id).select().single();
+    if (error) { toast('Could not save idea: ' + error.message, 'error'); return null; }
+    return normalizePipelineItem(updated);
+  },
+  async deleteItem(id) {
+    const { error } = await supabaseClient.from('pipeline_items').delete().eq('id', id);
+    if (error) toast('Could not delete idea: ' + error.message, 'error');
   },
 };
 
@@ -1710,7 +1894,7 @@ async function nav(view, id=null, { push=true }={}) {
   else { backBtn.classList.add('hidden'); }
   if (view==='dashboard')        await renderDashboard();
   if (view==='posts')            await renderPostsTable();
-  if (view==='calendar')         await renderCalendar();
+  if (view==='calendar')         await switchCalTab(calActiveTab);
   if (view==='editor')           await initEditor(id);
   if (view==='import')           resetImport();
   if (view==='faves')            await renderFavesTable();
@@ -1824,6 +2008,256 @@ function calGoToday() {
 function calAddPost(dayKey) {
   pendingCalendarDate = dayKey;
   nav('editor');
+}
+
+// The Editorial Calendar panel has two sub-views (Calendar / Pipeline)
+// switched via tabs rather than separate sidebar entries — remembers
+// whichever was open last so returning to the panel doesn't reset it.
+let calActiveTab = 'calendar';
+function switchCalTab(tab) {
+  calActiveTab = tab;
+  document.getElementById('calTabCalendar').classList.toggle('active', tab === 'calendar');
+  document.getElementById('calTabPipeline').classList.toggle('active', tab === 'pipeline');
+  document.getElementById('calViewCalendar').classList.toggle('hidden', tab !== 'calendar');
+  document.getElementById('calViewPipeline').classList.toggle('hidden', tab !== 'pipeline');
+  return tab === 'calendar' ? renderCalendar() : renderPipeline();
+}
+
+/* ── CONTENT PIPELINE ───────────────────────────────────────
+   Kanban board tracking posts from idea through publish — separate
+   from the "posts" table (cards here are planning/work-in-progress,
+   not necessarily real drafts yet). See supabase-setup-13.sql. */
+const PIPELINE_STAGES = [
+  { key: 'idea',          label: 'Idea' },
+  { key: 'researching',   label: 'Researching' },
+  { key: 'testing',       label: 'Testing' },
+  { key: 'drafting',      label: 'Drafting' },
+  { key: 'editing',       label: 'Editing' },
+  { key: 'seo_links',     label: 'SEO/Links' },
+  { key: 'images',        label: 'Images' },
+  { key: 'scheduled',     label: 'Scheduled' },
+  { key: 'published',     label: 'Published' },
+  { key: 'update_needed', label: 'Update Needed' },
+];
+const PIPELINE_TARGETS = [
+  { type: 'Commerce',     target: 4, color: '#b45309' },
+  { type: 'Shopping/SEO', target: 3, color: '#2563eb' },
+  { type: 'Fashion',      target: 2, color: '#db2777' },
+  { type: 'Beauty News',  target: 2, color: '#9333ea' },
+  { type: 'Feature',      target: 1, color: '#0d9488' },
+];
+const ctSlug = t => (t || '').toLowerCase().replace(/[\s/]+/g, '-');
+
+let pipelineItems = [];
+let pipelineMonth = new Date();
+let editingPipeId = null;
+let pipeDragId = null;
+
+const pipelineMonthKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+
+async function renderPipeline() {
+  pipelineItems = await PipelineDB.getItems();
+  renderPipelineTally();
+  renderPipelineBoard();
+}
+
+function renderPipelineTally() {
+  document.getElementById('pipeMonthLabel').textContent = pipelineMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthKey = pipelineMonthKey(pipelineMonth);
+  const inMonth = pipelineItems.filter(i => i.targetMonth === monthKey);
+  document.getElementById('pipeTally').innerHTML = PIPELINE_TARGETS.map(t => {
+    const count = inMonth.filter(i => i.contentType === t.type).length;
+    const met = count >= t.target;
+    return `<div class="pipe-tally-chip ${met?'met':''}">
+      <span class="pipe-tally-dot" style="background:${t.color};"></span>
+      ${esc(t.type)} <span class="pipe-tally-count">${count}/${t.target}</span>
+    </div>`;
+  }).join('');
+}
+
+function pipelineShiftMonth(delta) {
+  pipelineMonth = new Date(pipelineMonth.getFullYear(), pipelineMonth.getMonth() + delta, 1);
+  renderPipelineTally();
+}
+
+function pipelineCardHTML(item) {
+  const icons = [];
+  if (item.keyword)              icons.push('<i class="fas fa-magnifying-glass" title="Keyword set"></i>');
+  if (item.affiliateOpportunity) icons.push('<i class="fas fa-dollar-sign" title="Affiliate opportunity"></i>');
+  if (item.photoVideo)           icons.push('<i class="fas fa-camera" title="Photo/video needed"></i>');
+  if (item.socialDeliverable)    icons.push('<i class="fas fa-share-nodes" title="Social deliverable"></i>');
+  if (item.url)                  icons.push('<i class="fas fa-link" title="URL set"></i>');
+  return `
+    <div class="pipe-card" draggable="true" data-id="${item.id}" onclick="openPipelineModal('${item.id}')">
+      <div class="pipe-card-title">${esc(item.title||'Untitled')}</div>
+      <div class="pipe-card-foot">
+        ${item.contentType ? `<span class="pipe-ct-badge pipe-ct-${ctSlug(item.contentType)}">${esc(item.contentType)}</span>` : '<span></span>'}
+        ${icons.length ? `<span class="pipe-card-icons">${icons.join('')}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderPipelineBoard() {
+  document.getElementById('pipeBoard').innerHTML = PIPELINE_STAGES.map(stage => {
+    const items = pipelineItems.filter(i => (i.stage || 'idea') === stage.key);
+    return `
+      <div class="pipe-col" data-stage="${stage.key}">
+        <div class="pipe-col-head"><span>${stage.label}</span><span class="pipe-col-count">${items.length}</span></div>
+        <div class="pipe-col-body">${items.map(pipelineCardHTML).join('')}</div>
+        <button type="button" class="pipe-col-add" onclick="openPipelineModal(null,'${stage.key}')"><i class="fas fa-plus"></i> Add</button>
+      </div>`;
+  }).join('');
+  wirePipelineDragDrop();
+}
+
+function wirePipelineDragDrop() {
+  document.querySelectorAll('.pipe-card').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      pipeDragId = card.dataset.id;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+  });
+  document.querySelectorAll('.pipe-col').forEach(col => {
+    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drag-over'); });
+    col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      const id = pipeDragId;
+      pipeDragId = null;
+      if (!id) return;
+      const newStage = col.dataset.stage;
+      const item = pipelineItems.find(i => i.id === id);
+      if (!item || item.stage === newStage) return;
+      item.stage = newStage;
+      renderPipelineBoard();
+      await PipelineDB.updateItem(id, { stage: newStage });
+    });
+  });
+}
+
+async function openPipelineModal(id, presetStage) {
+  editingPipeId = id;
+  const item = id ? pipelineItems.find(i => i.id === id) : null;
+  document.getElementById('pipeModalTitle').textContent   = item ? 'Edit Idea' : 'New Idea';
+  document.getElementById('pipeTitle').value              = item?.title || '';
+  document.getElementById('pipeStage').value               = item?.stage || presetStage || 'idea';
+  document.getElementById('pipeContentType').value         = item?.contentType || '';
+  document.getElementById('pipeTargetMonth').value         = item?.targetMonth || pipelineMonthKey(pipelineMonth);
+  document.getElementById('pipeKeyword').value             = item?.keyword || '';
+  document.getElementById('pipeProducts').value             = item?.productsNeeded || '';
+  document.getElementById('pipeTestingDates').value         = item?.testingDates || '';
+  document.getElementById('pipeAffiliate').value            = item?.affiliateOpportunity || '';
+  document.getElementById('pipePhotoVideo').value           = item?.photoVideo || '';
+  document.getElementById('pipeSocial').value               = item?.socialDeliverable || '';
+  document.getElementById('pipeUrl').value                  = item?.url || '';
+  document.getElementById('btnPipeDelete').classList.toggle('hidden', !item);
+  document.getElementById('pipeModal').classList.remove('hidden');
+  document.getElementById('pipeTitle').focus();
+  await renderPipelineLinkedPostBox(item?.linkedPostId);
+}
+
+// Shows either the "Create Draft Post" button (nothing linked yet) or a
+// live status badge for the linked post — fetched fresh each time the
+// modal opens so it reflects the post's current draft/published state,
+// not just whatever the card's manual Stage was last set to.
+async function renderPipelineLinkedPostBox(linkedPostId) {
+  const box = document.getElementById('pipeLinkedPostBox');
+  const createBtn = document.getElementById('btnPipeCreateDraft');
+  if (!linkedPostId) {
+    box.classList.add('hidden');
+    createBtn.classList.remove('hidden');
+    createBtn.innerHTML = '<i class="fas fa-file-circle-plus"></i> Create Draft Post';
+    return;
+  }
+  const post = await DB.getPost(linkedPostId);
+  if (!post) {
+    box.classList.add('hidden');
+    createBtn.classList.remove('hidden');
+    createBtn.innerHTML = '<i class="fas fa-file-circle-plus"></i> Create Draft Post (previous draft was deleted)';
+    return;
+  }
+  createBtn.classList.add('hidden');
+  box.classList.remove('hidden');
+  document.getElementById('pipeLinkedPostStatus').innerHTML = `<span class="badge b-${post.status||'draft'}">${post.status||'draft'}</span> Linked to "${esc(post.title||'Untitled')}"`;
+  document.getElementById('btnPipeOpenDraft').onclick = () => { closePipelineModal(); nav('editor', post.id); };
+}
+
+function closePipelineModal() {
+  document.getElementById('pipeModal').classList.add('hidden');
+  editingPipeId = null;
+}
+
+function collectPipelineFormData() {
+  return {
+    title:                document.getElementById('pipeTitle').value.trim(),
+    stage:                document.getElementById('pipeStage').value,
+    contentType:          document.getElementById('pipeContentType').value,
+    targetMonth:          document.getElementById('pipeTargetMonth').value,
+    keyword:              document.getElementById('pipeKeyword').value.trim(),
+    productsNeeded:       document.getElementById('pipeProducts').value.trim(),
+    testingDates:         document.getElementById('pipeTestingDates').value.trim(),
+    affiliateOpportunity: document.getElementById('pipeAffiliate').value.trim(),
+    photoVideo:           document.getElementById('pipePhotoVideo').value.trim(),
+    socialDeliverable:    document.getElementById('pipeSocial').value.trim(),
+    url:                  document.getElementById('pipeUrl').value.trim(),
+  };
+}
+
+async function savePipelineItem() {
+  const data = collectPipelineFormData();
+  if (!data.title) { toast('Add a title first.', 'warning'); return; }
+  if (editingPipeId) {
+    await PipelineDB.updateItem(editingPipeId, data);
+    toast('Idea updated!', 'success');
+  } else {
+    data.sortOrder = pipelineItems.length;
+    await PipelineDB.createItem(data);
+    toast('Idea added!', 'success');
+  }
+  closePipelineModal();
+  await renderPipeline();
+}
+
+// Creates a real draft in the Posts table from this card's title, links
+// the card to it (so its status box shows the post's live draft/
+// published state), nudges the card's stage to Drafting, saves the
+// card if it wasn't already, then jumps straight into the post editor.
+async function createDraftFromPipelineItem() {
+  const data = collectPipelineFormData();
+  if (!data.title) { toast('Add a title first.', 'warning'); return; }
+  const slug = `${slugify(data.title)}-${Date.now().toString(36)}`;
+  const createdPost = await DB.createPost({
+    title: data.title, slug, content: '', excerpt: '', category: '', tags: [], image: '', readTime: '',
+    status: 'draft', focal_x: 50, focal_y: 50, featured: false, shopLinks: [],
+    publishedAt: new Date().toISOString(),
+  });
+  if (!createdPost) return;
+  data.stage = 'drafting';
+  data.linkedPostId = createdPost.id;
+  if (editingPipeId) {
+    await PipelineDB.updateItem(editingPipeId, data);
+  } else {
+    data.sortOrder = pipelineItems.length;
+    await PipelineDB.createItem(data);
+  }
+  toast('Draft post created — opening editor…', 'success');
+  closePipelineModal();
+  await renderPipeline();
+  nav('editor', createdPost.id);
+}
+
+function confirmDeletePipelineItem() {
+  if (!editingPipeId) return;
+  const id = editingPipeId;
+  closePipelineModal();
+  openModal('Delete this idea?', 'This will permanently remove it from the pipeline.', async () => {
+    await PipelineDB.deleteItem(id);
+    toast('Idea deleted.', 'success');
+    await renderPipeline();
+  });
 }
 
 /* ── POSTS TABLE ────────────────────────────────────────── */
@@ -3527,6 +3961,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('calNextBtn').addEventListener('click', () => calShiftMonth(1));
   document.getElementById('calTodayBtn').addEventListener('click', calGoToday);
   document.getElementById('calCatFilter').addEventListener('change', renderCalendar);
+
+  // Content Pipeline (lives as a tab inside the Editorial Calendar panel)
+  document.getElementById('pipePrevBtn').addEventListener('click', () => pipelineShiftMonth(-1));
+  document.getElementById('pipeNextBtn').addEventListener('click', () => pipelineShiftMonth(1));
+  document.getElementById('btnPipeAdd').addEventListener('click', () => openPipelineModal(null));
+  document.getElementById('btnPipeSave').addEventListener('click', savePipelineItem);
+  document.getElementById('btnPipeCancel').addEventListener('click', closePipelineModal);
+  document.getElementById('btnPipeDelete').addEventListener('click', confirmDeletePipelineItem);
+  document.getElementById('btnPipeCreateDraft').addEventListener('click', createDraftFromPipelineItem);
   document.getElementById('fCommentStatus')?.addEventListener('change', renderCommentsTable);
 
   // Import file input
