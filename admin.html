@@ -2886,7 +2886,11 @@ function wireShopLinksList() {
         const data = await r.json();
         if (data.image) item.image = data.image;
         if (data.title && !item.name.trim()) item.name = data.title;
-        if (!data.image) toast('Could not find an image at that link — paste one manually.', 'warning');
+        if (!data.image) {
+          toast(data.blocked
+            ? 'That retailer blocks automatic fetches — right-click the product photo, "Copy Image Address," and paste it in the Image URL field.'
+            : 'Could not find an image at that link — paste one manually.', 'warning');
+        }
         renderShopLinksList();
         scheduleAutosave();
       } catch {

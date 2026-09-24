@@ -4,6 +4,14 @@
     "api/post.js": { "includeFiles": "post.html" },
     "api/category.js": { "includeFiles": "{lifestyle,fashion,beauty,faith,blog}.html" }
   },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.nanayaaansah.com" }],
+      "destination": "https://nanayaaansah.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/blog/:category/:slug", "destination": "/api/post?category=:category&slug=:slug" },
     { "source": "/blog/:slug", "destination": "/api/post?slug=:slug" },

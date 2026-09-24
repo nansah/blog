@@ -1,9 +1,14 @@
 // Fetches a shop link's Open Graph image/title server-side (avoids the
 // browser CORS restrictions a client-side fetch would hit) so the admin
 // editor's "Shop This Post" links can auto-fill a product image instead
-// of requiring a manually pasted image URL. Best-effort: some retailers
-// (notably Amazon) sometimes block non-browser requests, in which case
-// this just returns empty and the editor falls back to manual entry.
+// of requiring a manually pasted image URL. Best-effort: ShopMy links in
+// particular are redirects straight to whatever retailer is being linked
+// (Amazon, Saks, etc.), and several major retailers run bot-detection
+// (DataDome, PerimeterX) that blocks non-browser requests outright — that's
+// the retailer's anti-scraping protection working as intended, not a bug
+// here, so this doesn't try to work around it. It just reports back
+// whether the failure looks like a block vs. a genuinely missing image,
+// so the editor can tell the user which is which.
 
 const metaTag = (html, prop) => {
   const patterns = [
@@ -41,8 +46,12 @@ module.exports = async (req, res) => {
     const html = await r.text();
     const image = decodeEntities(metaTag(html, 'og:image') || metaTag(html, 'twitter:image'));
     const title = decodeEntities(metaTag(html, 'og:title') || metaTag(html, 'twitter:title'));
-    res.status(200).json({ image, title });
+    const blocked = !image && (
+      r.status === 403 || r.status === 429 ||
+      /captcha-delivery|Pardon Our Interruption|Please enable JS and disable any ad blocker|validateCaptcha|Robot Check/i.test(html)
+    );
+    res.status(200).json({ image, title, blocked });
   } catch {
-    res.status(200).json({ image: '', title: '' });
+    res.status(200).json({ image: '', title: '', blocked: false });
   }
 };
