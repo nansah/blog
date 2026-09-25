@@ -10,6 +10,11 @@
       "has": [{ "type": "host", "value": "www.nanayaaansah.com" }],
       "destination": "https://nanayaaansah.com/:path*",
       "permanent": true
+    },
+    {
+      "source": "/mediakit",
+      "destination": "https://beacons.ai/nanayaa.ansah/mediakit",
+      "permanent": false
     }
   ],
   "rewrites": [
